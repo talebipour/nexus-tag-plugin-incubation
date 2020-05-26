@@ -9,7 +9,10 @@ import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Map.Entry;
+
 import org.sonatype.nexus.common.entity.EntityId;
 import org.sonatype.nexus.orient.OClassNameBuilder;
 import org.sonatype.nexus.orient.OIndexNameBuilder;
@@ -23,8 +26,8 @@ public class TagEntityAdapter extends IterableEntityAdapter<TagEntity> {
 
     private static final String NAME_FIELD = "name";
     private static final String PROJECT_FIELD = "project";
-    private static final String CREATION_DATE_FIELD = "creationDate";
     private static final String ATTRIBUTES_FIELD = "attributes";
+    private static final String CREATION_DATE_FIELD = "creationDate";
 
     private static final String NAME_INDEX = new OIndexNameBuilder().type(DB_CLASS).property("name").build();
     private static final String PROJECT_INDEX = new OIndexNameBuilder().type(DB_CLASS).property(PROJECT_FIELD).build();
@@ -72,18 +75,32 @@ public class TagEntityAdapter extends IterableEntityAdapter<TagEntity> {
         return Optional.ofNullable(entity);
     }
 
-    public Iterable<TagEntity> search(ODatabaseDocumentTx tx, String project, String name) {
+    public Iterable<TagEntity> search(ODatabaseDocumentTx tx, String project, String name,
+            Map<String, String> attributes) {
         List<QueryPredicate> predicates = new ArrayList<>();
         if (project != null) {
-            predicates.add(new QueryPredicate(PROJECT_FIELD, "=", project));
+            predicates.add(new QueryPredicate(PROJECT_FIELD, "=", stringLiteral(project)));
         }
         if (name != null) {
-            predicates.add(new QueryPredicate(NAME_FIELD, "=", name));
+            predicates.add(new QueryPredicate(NAME_FIELD, "=", stringLiteral(name)));
         }
+
+        for (Entry<String, String> entry : attributes.entrySet()) {
+            String field = ATTRIBUTES_FIELD + "[" + stringLiteral(entry.getKey()) + "]";
+            predicates.add(new QueryPredicate(field, "=", stringLiteral(entry.getValue())));
+        }
+
         String query = buildQuery(predicates);
         log.info("Searching for tags with query={}", query);
         List<ODocument> documents = tx.query(new OSQLSynchQuery<>(query));
         return transform(documents);
+    }
+
+    /**
+     * @return SQL string literal for given value (enclosed in single quotes)
+     */
+    private static String stringLiteral(String value) {
+        return "'" + value + "'";
     }
 
     private static String buildQuery(List<QueryPredicate> predicates) {
@@ -95,10 +112,10 @@ public class TagEntityAdapter extends IterableEntityAdapter<TagEntity> {
         while (it.hasNext()) {
             QueryPredicate predicate = it.next();
             query.append(' ').append(predicate.field)
+                    .append(' ')
                     .append(predicate.operator)
-                    .append("'")
-                    .append(predicate.value)
-                    .append("'");
+                    .append(' ')
+                    .append(predicate.value);
             if (it.hasNext()) {
                 query.append(" and");
             }

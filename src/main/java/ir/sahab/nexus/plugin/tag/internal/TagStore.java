@@ -5,6 +5,7 @@ import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SCHEMAS;
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
 import com.orientechnologies.orient.core.record.impl.ODocument;
 import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -41,9 +42,9 @@ public class TagStore extends StateGuardLifecycleSupport {
             return entityAdapter.findById(tx, new DetachedEntityId(id));
         }
     }
-    public Iterable<TagEntity> search(String project, String name) {
+    public Iterable<TagEntity> search(String project, String name, Map<String, String> attributes) {
         try (ODatabaseDocumentTx tx = dbProvider.get().acquire()) {
-            return entityAdapter.search(tx, project, name);
+            return entityAdapter.search(tx, project, name, attributes);
         }
     }
 

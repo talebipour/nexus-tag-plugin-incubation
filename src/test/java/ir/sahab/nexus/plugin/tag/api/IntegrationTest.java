@@ -31,6 +31,8 @@ import org.sonatype.nexus.rest.APIConstants;
 
 public class IntegrationTest {
 
+    private static final String CHANGE_ID = "Change-Id";
+
     @ClassRule
     public static DockerCompose compose = DockerCompose.builder()
             .file("/nexus.yml")
@@ -56,7 +58,7 @@ public class IntegrationTest {
     @Test
     public void test() {
         Map<String, String> attributes = new HashMap<>();
-        attributes.put("Change-Id", randomAlphanumeric(20));
+        attributes.put(CHANGE_ID, randomAlphanumeric(20));
         attributes.put("Commit-Id", randomAlphanumeric(20));
         Tag tag = new Tag(randomAlphabetic(5), randomAlphanumeric(5), attributes);
 
@@ -77,6 +79,14 @@ public class IntegrationTest {
         List<Tag> result = target.path("tags")
                 .queryParam("project", tag.getProject())
                 .queryParam("name", tag.getName())
+                .request()
+                .get(new GenericType<List<Tag>>() {});
+        assertEquals(1, result.size());
+        assertTagEquals(tag, result.get(0));
+
+        // Test Search by attribute
+        result = target.path("tags")
+                .queryParam("attributes." + CHANGE_ID, tag.getAttributes().get(CHANGE_ID))
                 .request()
                 .get(new GenericType<List<Tag>>() {});
         assertEquals(1, result.size());
