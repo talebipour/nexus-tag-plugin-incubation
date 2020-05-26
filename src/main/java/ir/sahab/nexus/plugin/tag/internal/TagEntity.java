@@ -23,8 +23,7 @@ class TagEntity extends AbstractEntity {
     TagEntity() {
     }
 
-    TagEntity(String project, String name,
-                     Map<String, String> attributes) {
+    TagEntity(String project, String name, Map<String, String> attributes) {
         this.project = project;
         this.name = name;
         this.attributes = attributes;

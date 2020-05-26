@@ -20,6 +20,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.Response.Status.Family;
 import org.junit.After;
 import org.junit.Before;
@@ -65,14 +66,14 @@ public class IntegrationTest {
         assertEquals(Family.SUCCESSFUL, response.getStatusInfo().getFamily());
         Tag postResponseTag = response.readEntity(Tag.class);
         assertNotNull(postResponseTag.getId());
-        assertFalse(postResponseTag.getCreationDate().before(new Date()));
+        assertFalse(new Date().before(postResponseTag.getCreationDate()));
         assertTagEquals(tag, postResponseTag);
 
         // Test Get by Id
         Tag retrieved = target.path("tag/" + postResponseTag.getId()).request().get(Tag.class);
         assertTagEquals(tag, retrieved);
 
-        // Test Search
+        // Test Search by project and name
         List<Tag> result = target.path("tags")
                 .queryParam("project", tag.getProject())
                 .queryParam("name", tag.getName())
@@ -80,6 +81,12 @@ public class IntegrationTest {
                 .get(new GenericType<List<Tag>>() {});
         assertEquals(1, result.size());
         assertTagEquals(tag, result.get(0));
+
+        // Test deleting tag
+        response = target.path("tag/" + postResponseTag.getId()).request().delete();
+        assertEquals(Family.SUCCESSFUL, response.getStatusInfo().getFamily());
+        response = target.path("tag/" + postResponseTag.getId()).request().get();
+        assertEquals(Status.NOT_FOUND.getStatusCode(), response.getStatusInfo().getStatusCode());
     }
 
     private void assertTagEquals(Tag expected, Tag actual) {

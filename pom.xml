@@ -35,6 +35,12 @@
         </dependency>
 
         <dependency>
+            <groupId>org.sonatype.nexus</groupId>
+            <artifactId>nexus-test-common</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.sonatype.goodies</groupId>
             <artifactId>goodies-testsupport</artifactId>
             <scope>test</scope>
@@ -46,6 +52,7 @@
             <version>1.0.0</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-jackson2-provider</artifactId>
