@@ -16,6 +16,9 @@ import org.sonatype.nexus.common.entity.DetachedEntityId;
 import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
 import org.sonatype.nexus.orient.DatabaseInstance;
 
+/**
+ * Acts as a facade for storing and retrieving tags into database.
+ */
 @Named("tagStore")
 @ManagedLifecycle(phase = SCHEMAS)
 @Singleton

@@ -18,6 +18,9 @@ import org.sonatype.nexus.orient.OClassNameBuilder;
 import org.sonatype.nexus.orient.OIndexNameBuilder;
 import org.sonatype.nexus.orient.entity.IterableEntityAdapter;
 
+/**
+ * Provides persisting/reading tags from database.
+ */
 public class TagEntityAdapter extends IterableEntityAdapter<TagEntity> {
 
     private static final String TYPE_NAME = "tag";

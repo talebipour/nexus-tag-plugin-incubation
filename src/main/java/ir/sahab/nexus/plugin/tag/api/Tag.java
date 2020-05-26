@@ -5,7 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Represents a tag which can be created using REST API.
+ * Represents a tag which can be created using REST API. This class is meant to
+ * be serialized by Jackson and to be used in REST API.
  */
 public class Tag {
 

@@ -3,6 +3,8 @@ package ir.sahab.nexus.plugin.tag.internal;
 import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
 
 import ir.sahab.nexus.plugin.tag.api.Tag;
+import ir.sahab.nexus.plugin.tag.api.TagRestResourceDoc;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -27,11 +29,13 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.Status;
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.rest.Resource;
-
+/**
+ * Endpoint which provides RESTful API for tagging.
+ */
 @Named
 @Singleton
 @Path(V1_API_PREFIX)
-public class TagRestResource extends ComponentSupport implements Resource {
+public class TagRestResource extends ComponentSupport implements Resource, TagRestResourceDoc {
 
     private static final String ATTRIBUTES_PARAM_PREFIX = "attributes.";
     private TagStore store;
@@ -44,6 +48,7 @@ public class TagRestResource extends ComponentSupport implements Resource {
     @GET
     @Path("/tag/{id}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Override
     public Response getById(@PathParam("id") String id) {
         log.info("Finding tag with id={}", id);
         Optional<TagEntity> optional = store.findById(id);
@@ -59,6 +64,7 @@ public class TagRestResource extends ComponentSupport implements Resource {
     @GET
     @Path("/tags")
     @Produces(MediaType.APPLICATION_JSON)
+    @Override
     public List<Tag> list(@QueryParam("project") String project, @QueryParam("name") String name,
             @Context UriInfo uriInfo) {
         Map<String, String> attributes = extractAttributeParams(uriInfo);
@@ -87,6 +93,7 @@ public class TagRestResource extends ComponentSupport implements Resource {
     @Path("/tag")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @Override
     public Tag add(Tag tag) {
         if (tag.getId() != null) {
             throw new BadRequestException("id must be null.");
@@ -98,6 +105,7 @@ public class TagRestResource extends ComponentSupport implements Resource {
 
     @DELETE
     @Path("/tag/{id}")
+    @Override
     public Response delete(@PathParam("id") String id) {
         log.info("Finding tag with id={}", id);
         Optional<TagEntity> optional = store.delete(id);
