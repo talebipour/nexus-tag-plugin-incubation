@@ -27,7 +27,9 @@ public interface TagRestResourceDoc {
     @GET
     @ApiOperation("List tags with given criteria")
     List<Tag> list(@ApiParam("Filters tags with given project") String project,
-            @ApiParam("Filters tags with given name") String name, UriInfo uriInfo);
+            @ApiParam("Filters tags with given name") String name,
+            @ApiParam("Comma separated attribute values to search in format key1=value1[,key2=value2,...]")
+            String attributes);
 
     @POST
     @ApiOperation("Create given tag")

@@ -5,6 +5,9 @@ import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
 import ir.sahab.nexus.plugin.tag.api.Tag;
 import ir.sahab.nexus.plugin.tag.api.TagRestResourceDoc;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -37,7 +40,6 @@ import org.sonatype.nexus.rest.Resource;
 @Path(V1_API_PREFIX)
 public class TagRestResource extends ComponentSupport implements Resource, TagRestResourceDoc {
 
-    private static final String ATTRIBUTES_PARAM_PREFIX = "attributes.";
     private TagStore store;
 
     @Inject
@@ -66,9 +68,9 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     @Produces(MediaType.APPLICATION_JSON)
     @Override
     public List<Tag> list(@QueryParam("project") String project, @QueryParam("name") String name,
-            @Context UriInfo uriInfo) {
-        Map<String, String> attributes = extractAttributeParams(uriInfo);
-        Iterable<TagEntity> entities = store.search(project, name, attributes);
+            @QueryParam("attributes") String attributes) {
+        Map<String, String> attributeMap = decodeAttributes(attributes);
+        Iterable<TagEntity> entities = store.search(project, name, attributeMap);
         log.info("Tag search for (project={}, name={}, attributes={})={}", project, name, attributes, entities);
         return StreamSupport.stream(entities.spliterator(), false)
                 .map(TagEntity::toDto)
@@ -76,17 +78,24 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     }
 
     /**
-     * Extracts all query parameters that are used for searching tag attributes. Attribute query parameters starts
-     * with {@link #ATTRIBUTES_PARAM_PREFIX} followed by name of attribute to search.
-     * If multiple values are assigned to a single attribute, only the first one is used.
-     *
-     * @return map to attribute name to search value
+     * Decodes query parameter of attributes to an attribute map.
+     * @param attributes comma separated key value pairs of attributes. i.e. key1=value1[,key2=value2,...]
+     * @return map of attribute name to search value
+     * @throws BadRequestException if key value pair is not in format key=value
      */
-    private Map<String, String> extractAttributeParams(UriInfo uriInfo) {
-        return uriInfo.getQueryParameters(true).entrySet()
-                .stream().filter(entry -> entry.getKey().startsWith(ATTRIBUTES_PARAM_PREFIX))
-                .collect(Collectors.toMap(entry -> entry.getKey().substring(ATTRIBUTES_PARAM_PREFIX.length()),
-                        entry -> entry.getValue().get(0)));
+    private Map<String, String> decodeAttributes(String attributes) {
+        if (attributes == null || attributes.trim().isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<String, String> map = new HashMap<>();
+        for (String keyValue : attributes.split(",")) {
+            String[] splitted = keyValue.split("=");
+            if (splitted.length != 2) {
+                throw new BadRequestException("Invalid attribute key value pair: " + keyValue);
+            }
+            map.put(splitted[0].trim(), splitted[1].trim());
+        }
+        return map;
     }
 
     @POST

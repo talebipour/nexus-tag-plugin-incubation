@@ -41,7 +41,7 @@ public class TagEntityAdapter extends IterableEntityAdapter<TagEntity> {
 
     @Override
     protected void defineType(OClass type) {
-        type.createProperty(PROJECT_FIELD, OType.STRING) .setMandatory(true).setNotNull(true);
+        type.createProperty(PROJECT_FIELD, OType.STRING).setMandatory(true).setNotNull(true);
         type.createProperty(NAME_FIELD, OType.STRING).setMandatory(true).setNotNull(true);
         type.createProperty(CREATION_DATE_FIELD, OType.DATETIME).setMandatory(true).setNotNull(true);
         type.createProperty(ATTRIBUTES_FIELD, OType.EMBEDDEDMAP).setMandatory(true).setNotNull(true);
@@ -126,7 +126,6 @@ public class TagEntityAdapter extends IterableEntityAdapter<TagEntity> {
         query.append(" order by ").append(CREATION_DATE_FIELD).append(" DESC");
         return query.toString();
     }
-
 
     private static class QueryPredicate {
         private final String field;

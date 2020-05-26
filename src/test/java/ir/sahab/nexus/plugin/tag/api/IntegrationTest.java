@@ -86,7 +86,7 @@ public class IntegrationTest {
 
         // Test Search by attribute
         result = target.path("tags")
-                .queryParam("attributes." + CHANGE_ID, tag.getAttributes().get(CHANGE_ID))
+                .queryParam("attributes", CHANGE_ID + "=" + tag.getAttributes().get(CHANGE_ID))
                 .request()
                 .get(new GenericType<List<Tag>>() {});
         assertEquals(1, result.size());
