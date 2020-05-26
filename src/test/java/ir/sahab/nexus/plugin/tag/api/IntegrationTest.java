@@ -6,12 +6,9 @@ import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import ir.sahab.dockercomposer.DockerCompose;
 import ir.sahab.dockercomposer.WaitFor;
-import ir.sahab.nexus.plugin.tag.internal.TagRestResource;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +34,7 @@ public class IntegrationTest {
     public static DockerCompose compose = DockerCompose.builder()
             .file("/nexus.yml")
             .projectName("nexus-tag-plugin-test")
-//            .forceRecreate()
+            .forceRecreate()
             .afterStart(WaitFor.portOpen("nexus", 8081, 300_000))
             .build();
 

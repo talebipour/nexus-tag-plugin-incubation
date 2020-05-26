@@ -23,8 +23,23 @@
 hs_err_pid*
 
 # IDE
+#Intellij IDEA
 .idea
 *.iml
 
+# VSCode / Eclipse
+.settings
+.factorypath
+.project
+.classpath
+bin/
+.vscode
+*.code-workspace
+
+.history/
+
 # Maven
 target
+
+
+

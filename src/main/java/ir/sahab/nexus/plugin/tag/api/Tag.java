@@ -1,10 +1,8 @@
 package ir.sahab.nexus.plugin.tag.api;
 
-import com.google.common.annotations.VisibleForTesting;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import org.sonatype.nexus.common.entity.AbstractEntity;
 
 /**
  * Represents a tag which can be created using REST API.
