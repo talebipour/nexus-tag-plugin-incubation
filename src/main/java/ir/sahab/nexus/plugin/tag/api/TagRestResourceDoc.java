@@ -30,9 +30,7 @@ public interface TagRestResourceDoc {
 
     @POST
     @ApiOperation("Creates a new tag")
-    @ApiResponses(value = {
-        @ApiResponse(code = 400, message = "Invalid request.")
-    })
+    
     Tag add(CreateTagRequest request);
 
     @PUT

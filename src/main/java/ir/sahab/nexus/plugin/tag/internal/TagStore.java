@@ -4,6 +4,7 @@ import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SCHEMAS;
 
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
 import com.orientechnologies.orient.core.record.impl.ODocument;
+import ir.sahab.nexus.plugin.tag.api.CreateTagRequest;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -16,8 +17,6 @@ import javax.inject.Singleton;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
 import org.sonatype.nexus.orient.DatabaseInstance;
-
-import ir.sahab.nexus.plugin.tag.api.CreateTagRequest;
 
 /**
  * Acts as a facade for storing and retrieving tags into database.

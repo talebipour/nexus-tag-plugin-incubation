@@ -5,8 +5,6 @@ import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
 import ir.sahab.nexus.plugin.tag.api.CreateTagRequest;
 import ir.sahab.nexus.plugin.tag.api.Tag;
 import ir.sahab.nexus.plugin.tag.api.TagRestResourceDoc;
-
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -30,8 +28,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-
-import org.jboss.resteasy.annotations.Body;
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.rest.Resource;
 /**

@@ -1,6 +1,5 @@
 package ir.sahab.nexus.plugin.tag.internal;
 
-import ir.sahab.nexus.plugin.tag.api.CreateTagRequest;
 import ir.sahab.nexus.plugin.tag.api.Tag;
 import java.util.Date;
 import java.util.HashMap;
