@@ -1,12 +1,14 @@
 package ir.sahab.nexus.plugin.tag.api;
 
-
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import ir.sahab.dockercomposer.DockerCompose;
 import ir.sahab.dockercomposer.WaitFor;
+import ir.sahab.nexus.plugin.tag.api.TagDefinition.AssociatedComponent;
+import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +22,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.Response.Status.Family;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -35,22 +38,46 @@ public class IntegrationTest {
     public static DockerCompose compose = DockerCompose.builder()
             .file("/nexus.yml")
             .projectName("nexus-tag-plugin-test")
-            .forceRecreate()
+            // .forceRecreate()
             .afterStart(WaitFor.portOpen("nexus", 8081, 1_200_000))
             .build();
 
     private Client client;
     private WebTarget target;
 
+    private List<AssociatedComponent> components;
+
     @Before
     public void setup() {
         client = ClientBuilder.newClient();
         target = client.target("http://nexus:8081/service/rest" + APIConstants.V1_API_PREFIX);
+
+        components = new ArrayList<>();
+        components.add(new AssociatedComponent("repo1", "gr1", "comp1", "1"));
+        components.add(new AssociatedComponent("repo2", null, "comp2", "2"));
+        //TODO: Configure upload relams before
+        components.forEach(this::uploadComponent);
     }
+
 
     @After
     public void tearDown() {
         client.close();
+    }
+
+    private void uploadComponent(AssociatedComponent component) {
+        MultipartFormDataOutput output = new MultipartFormDataOutput();
+        output.addFormData("maven2.groupId", "group.test", MediaType.TEXT_PLAIN_TYPE);
+        output.addFormData("maven2.artifactId", "test-artifact", MediaType.TEXT_PLAIN_TYPE);
+        output.addFormData("maven2.version=", randomAlphanumeric(5), MediaType.TEXT_PLAIN_TYPE);
+        output.addFormData("maven2.asset1.extension", "jar", MediaType.TEXT_PLAIN_TYPE);
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(randomAlphanumeric(100).getBytes());
+        output.addFormData("maven2.asset1", inputStream, MediaType.APPLICATION_OCTET_STREAM_TYPE, "test-artifact.jar");
+
+        Response response = target.path("components").queryParam("repository", "maven-releases")
+                .request()
+                .post(Entity.entity(output, MediaType.MULTIPART_FORM_DATA_TYPE));
+        assertEquals(Family.SUCCESSFUL, response.getStatusInfo().getFamily());
     }
 
     @Test
@@ -59,7 +86,8 @@ public class IntegrationTest {
         attributes.put(CHANGE_ID, randomAlphanumeric(20));
         attributes.put(STATUS, "failed");
         attributes.put("Commit-Id", randomAlphanumeric(20));
-        CreateTagRequest tag = new CreateTagRequest(randomAlphanumeric(5), attributes);
+
+        TagDefinition tag = new TagDefinition(randomAlphanumeric(5), attributes, components);
 
         // Create Tag
         Response response = target.path("tag").request().post(Entity.entity(tag, MediaType.APPLICATION_JSON_TYPE));
@@ -99,8 +127,9 @@ public class IntegrationTest {
         assertEquals(Status.NOT_FOUND.getStatusCode(), response.getStatusInfo().getStatusCode());
     }
 
-    private void assertTagEquals(CreateTagRequest expected, Tag actual) {
+    private void assertTagEquals(TagDefinition expected, Tag actual) {
         assertEquals(expected.getName(), actual.getName());
         assertEquals(expected.getAttributes(), actual.getAttributes());
+        assertEquals(expected.getComponents(), actual.getComponents());
     }
 }

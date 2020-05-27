@@ -1,7 +1,6 @@
 package ir.sahab.nexus.plugin.tag.api;
 
 import java.util.List;
-
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -30,15 +29,14 @@ public interface TagRestResourceDoc {
 
     @POST
     @ApiOperation("Creates a new tag")
-    
-    Tag add(CreateTagRequest request);
+    Tag add(TagDefinition definition);
 
     @PUT
     @ApiOperation("Creates a new tag or updates existing one")
     @ApiResponses(value = {
         @ApiResponse(code = 400, message = "Invalid request.")
     })
-    Tag addOrUpdate(CreateTagRequest request,
+    Tag addOrUpdate(TagDefinition definition,
             @ApiParam(value = "Name of tag to create or update", required = true) String name);
 
     @DELETE

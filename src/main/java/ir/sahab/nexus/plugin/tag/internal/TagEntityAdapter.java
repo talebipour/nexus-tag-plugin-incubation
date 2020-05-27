@@ -17,6 +17,7 @@ import java.util.Map.Entry;
 import org.sonatype.nexus.orient.OClassNameBuilder;
 import org.sonatype.nexus.orient.OIndexNameBuilder;
 import org.sonatype.nexus.orient.entity.IterableEntityAdapter;
+import org.sonatype.nexus.repository.storage.ComponentEntityAdapter;
 
 /**
  * Provides persisting/reading tags from database.
@@ -29,6 +30,7 @@ public class TagEntityAdapter extends IterableEntityAdapter<TagEntity> {
 
     private static final String NAME_FIELD = "name";
     private static final String ATTRIBUTES_FIELD = "attributes";
+    private static final String COMPONENTS_FIELD = "components";
     private static final String FIRST_CREATED_FIELD = "firstCreated";
     private static final String LAST_UPDATED_FIELD = "lastUpdated";
 
@@ -39,14 +41,22 @@ public class TagEntityAdapter extends IterableEntityAdapter<TagEntity> {
     }
 
     @Override
-    protected void defineType(OClass type) {
+    protected void defineType(ODatabaseDocumentTx db, OClass type) {
         type.createProperty(NAME_FIELD, OType.STRING).setMandatory(true).setNotNull(true);
         type.createProperty(FIRST_CREATED_FIELD, OType.DATETIME).setMandatory(true).setNotNull(true);
         type.createProperty(LAST_UPDATED_FIELD, OType.DATETIME).setMandatory(true).setNotNull(true);
         type.createProperty(ATTRIBUTES_FIELD, OType.EMBEDDEDMAP).setMandatory(true).setNotNull(true);
 
+        OClass componentClass = db.getMetadata().getSchema().getClass(ComponentEntityAdapter.DB_CLASS);
+        type.createProperty(COMPONENTS_FIELD, OType.LINKLIST, componentClass).setMandatory(true).setNotNull(true);
+
         type.createIndex(NAME_INDEX, INDEX_TYPE.UNIQUE, NAME_FIELD);
         type.createIndex(LAST_UPDATED_FIELD, INDEX_TYPE.NOTUNIQUE, LAST_UPDATED_FIELD);
+    }
+
+    @Override
+    protected void defineType(OClass type) {
+        // No need to implement, we've overridden #defineType(ODatabaseDocumentTx db, OClass type) instead.
     }
 
     @Override
@@ -60,6 +70,7 @@ public class TagEntityAdapter extends IterableEntityAdapter<TagEntity> {
         tag.setFirstCreated(oDocument.field(FIRST_CREATED_FIELD));
         tag.setLastUpdated(oDocument.field(LAST_UPDATED_FIELD));
         tag.setAttributes(oDocument.field(ATTRIBUTES_FIELD));
+        tag.setComponents(oDocument.field(COMPONENTS_FIELD));
     }
 
     @Override
@@ -68,6 +79,7 @@ public class TagEntityAdapter extends IterableEntityAdapter<TagEntity> {
         oDocument.field(FIRST_CREATED_FIELD, tag.getFirstCreated());
         oDocument.field(LAST_UPDATED_FIELD, tag.getLastUpdated());
         oDocument.field(ATTRIBUTES_FIELD, tag.getAttributes());
+        oDocument.field(COMPONENTS_FIELD, tag.getComponents());
     }
 
     public Optional<TagEntity> findByName(ODatabaseDocumentTx tx, String name) {

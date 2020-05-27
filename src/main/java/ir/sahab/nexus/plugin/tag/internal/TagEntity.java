@@ -1,10 +1,13 @@
 package ir.sahab.nexus.plugin.tag.internal;
 
 import ir.sahab.nexus.plugin.tag.api.Tag;
+import ir.sahab.nexus.plugin.tag.api.TagDefinition.AssociatedComponent;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.sonatype.nexus.common.entity.AbstractEntity;
+import org.sonatype.nexus.repository.storage.Component;
 
 
 /**
@@ -18,7 +21,9 @@ class TagEntity extends AbstractEntity {
 
     private Date lastUpdated;
 
-    private Map<String, String> attributes = new HashMap<>();
+    private Map<String, String> attributes;
+
+    private List<Component> components;
 
     TagEntity() {
     }
@@ -60,8 +65,12 @@ class TagEntity extends AbstractEntity {
         this.attributes = attributes;
     }
 
-    public Tag toDto() {
-        return new Tag(name, attributes, firstCreated, lastUpdated);
+    public List<Component> getComponents() {
+        return components;
+    }
+
+    public void setComponents(List<Component> components) {
+        this.components = components;
     }
 
     @Override

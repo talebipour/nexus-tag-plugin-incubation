@@ -4,19 +4,36 @@ import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SCHEMAS;
 
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
 import com.orientechnologies.orient.core.record.impl.ODocument;
-import ir.sahab.nexus.plugin.tag.api.CreateTagRequest;
+import ir.sahab.nexus.plugin.tag.api.Tag;
+import ir.sahab.nexus.plugin.tag.api.TagDefinition;
+import ir.sahab.nexus.plugin.tag.api.TagDefinition.AssociatedComponent;
+
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
+import javax.swing.RepaintManager;
+import javax.validation.ValidationException;
+
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
 import org.sonatype.nexus.orient.DatabaseInstance;
+import org.sonatype.nexus.repository.Repository;
+import org.sonatype.nexus.repository.manager.RepositoryManager;
+import org.sonatype.nexus.repository.storage.Bucket;
+import org.sonatype.nexus.repository.storage.BucketStore;
+import org.sonatype.nexus.repository.storage.Component;
+import org.sonatype.nexus.repository.storage.ComponentStore;
 
 /**
  * Acts as a facade for storing and retrieving tags into database.
@@ -26,13 +43,21 @@ import org.sonatype.nexus.orient.DatabaseInstance;
 @Singleton
 public class TagStore extends StateGuardLifecycleSupport {
 
-    private Provider<DatabaseInstance> dbProvider;
-    private TagEntityAdapter entityAdapter;
+    private final Provider<DatabaseInstance> dbProvider;
+    private final TagEntityAdapter entityAdapter;
+    private final Provider<RepositoryManager> repositoryManagerProvider;
+    private final Provider<ComponentStore> componentStoreProvider;
+    private final Provider<BucketStore> bucketStoreProvider;
 
     @Inject
-    public TagStore(Provider<DatabaseInstance> dbProvider, TagEntityAdapter entityAdapter) {
+    public TagStore(Provider<DatabaseInstance> dbProvider, TagEntityAdapter entityAdapter,
+            Provider<RepositoryManager> repositoryManagerProvider, Provider<ComponentStore> componentStoreProvider,
+            Provider<BucketStore> bucketStoreProvider) {
         this.dbProvider = dbProvider;
         this.entityAdapter = entityAdapter;
+        this.repositoryManagerProvider = repositoryManagerProvider;
+        this.componentStoreProvider = componentStoreProvider;
+        this.bucketStoreProvider = bucketStoreProvider;
     }
 
     @Override
@@ -43,28 +68,38 @@ public class TagStore extends StateGuardLifecycleSupport {
         }
     }
 
-    public Optional<TagEntity> findByName(String name) {
+    public Optional<Tag> findByName(String name) {
         try (ODatabaseDocumentTx tx = dbProvider.get().acquire()) {
-            return entityAdapter.findByName(tx, name);
-        }
-    }
-    public Iterable<TagEntity> search(Map<String, String> attributes) {
-        try (ODatabaseDocumentTx tx = dbProvider.get().acquire()) {
-            return entityAdapter.search(tx, attributes);
+            return entityAdapter.findByName(tx, name).map(this::toDto);
         }
     }
 
-    public TagEntity addOrUpdate(CreateTagRequest request) {
+    public List<Tag> search(Map<String, String> attributes) {
+        try (ODatabaseDocumentTx tx = dbProvider.get().acquire()) {
+            return StreamSupport.stream(entityAdapter.search(tx, attributes).spliterator(), false)
+                    .map(this::toDto)
+                    .collect(Collectors.toList());
+        }
+    }
+
+    /**
+     * Creates tag with given definition if it does not already exists, otherwise
+     * existing one will be update with the definition.
+     *
+     * @return created/updated tag
+     */
+    public Tag addOrUpdate(TagDefinition definition) {
         try (ODatabaseDocumentTx tx = dbProvider.get().acquire()) {
             Date currentDate = new Date();
-            Optional<TagEntity> existing = entityAdapter.findByName(tx, request.getName());
+            Optional<TagEntity> existing = entityAdapter.findByName(tx, definition.getName());
             TagEntity entity = existing.orElseGet(() -> {
                 TagEntity newEntity = entityAdapter.newEntity();
-                newEntity.setName(request.getName());
+                newEntity.setName(definition.getName());
                 newEntity.setFirstCreated(currentDate);
                 return newEntity;
             });
-            entity.setAttributes(new HashMap<>(request.getAttributes()));
+            entity.setAttributes(new HashMap<>(definition.getAttributes()));
+            entity.setComponents(findComponents(definition.getComponents()));
             entity.setLastUpdated(currentDate);
 
             ODocument document;
@@ -75,19 +110,56 @@ public class TagStore extends StateGuardLifecycleSupport {
                 document = entityAdapter.addEntity(tx, entity);
                 log.info("Tag {} added to database.", entity);
             }
-            return entityAdapter.transform(Collections.singleton(document)).iterator().next();
+            return toDto(entityAdapter.transform(Collections.singleton(document)).iterator().next());
         }
     }
 
     /**
-     * @param name name of tag to delete
-     * @return removed entity if existed.
+     * @param components list of a associated components to search
+     * @return component equivalent component entities of definition list
+     * @throws ValidationException if any of the associated components does not exist
      */
-    public Optional<TagEntity> delete(String name) {
+    private List<Component> findComponents(List<AssociatedComponent> components) {
+        List<Component> result = new ArrayList<>();
+        RepositoryManager repositoryManager = repositoryManagerProvider.get();
+        ComponentStore componentStore = componentStoreProvider.get();
+        for (AssociatedComponent associatedComponent : components) {
+            Repository repository = repositoryManager.get(associatedComponent.getName());
+            Map<String, String> versionAttribute = Collections.singletonMap("version", associatedComponent.getVersion());
+            List<Component> foundComponents = componentStore.getAllMatchingComponents(repository,
+                    associatedComponent.getGroup(), associatedComponent.getName(), versionAttribute);
+            if (foundComponents.isEmpty()) {
+                throw new ValidationException("Component " + associatedComponent + " does not exists.");
+            }
+            result.addAll(foundComponents);
+        }
+        return result;
+    }
+
+    /**
+     * @param name name of tag to delete
+     * @return removed tag if existed.
+     */
+    public Optional<Tag> delete(String name) {
         try (ODatabaseDocumentTx tx = dbProvider.get().acquire()) {
             Optional<TagEntity> optional = entityAdapter.findByName(tx, name);
             optional.ifPresent(entity -> entityAdapter.deleteEntity(tx, entity));
-            return optional;
+            return optional.map(this::toDto);
         }
+    }
+
+    public Tag toDto(TagEntity entity) {
+        List<AssociatedComponent> convertedComponents = entity.getComponents().stream()
+                .map(component -> new AssociatedComponent(findRepositoryName(component), component.group(),
+                        component.name(), component.version()))
+                .collect(Collectors.toList());
+        return new Tag(entity.getName(), entity.getAttributes(), convertedComponents, entity.getFirstCreated(),
+                entity.getLastUpdated());
+    }
+
+    private String findRepositoryName(Component component) {
+        BucketStore bucketStore = bucketStoreProvider.get();
+        Bucket bucket = bucketStore.getById(component.bucketId());
+        return bucket.getRepositoryName();
     }
 }

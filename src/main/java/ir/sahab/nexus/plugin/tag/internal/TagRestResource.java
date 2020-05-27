@@ -2,16 +2,14 @@ package ir.sahab.nexus.plugin.tag.internal;
 
 import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
 
-import ir.sahab.nexus.plugin.tag.api.CreateTagRequest;
 import ir.sahab.nexus.plugin.tag.api.Tag;
+import ir.sahab.nexus.plugin.tag.api.TagDefinition;
 import ir.sahab.nexus.plugin.tag.api.TagRestResourceDoc;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -51,9 +49,9 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     @Override
     public Response getByName(@PathParam("name") String name) {
         log.info("Finding tag with name={}", name);
-        Optional<TagEntity> optional = store.findByName(name);
+        Optional<Tag> optional = store.findByName(name);
         if (optional.isPresent()) {
-            Tag found = optional.get().toDto();
+            Tag found = optional.get();
             log.info("Tag {} found.", found);
             return Response.ok(found, MediaType.APPLICATION_JSON_TYPE).build();
         }
@@ -67,11 +65,9 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     @Override
     public List<Tag> list(@QueryParam("attributes") String attributes) {
         Map<String, String> attributeMap = decodeAttributes(attributes);
-        Iterable<TagEntity> entities = store.search(attributeMap);
-        log.info("Tag search for attributes={}={}", attributes, entities);
-        return StreamSupport.stream(entities.spliterator(), false)
-                .map(TagEntity::toDto)
-                .collect(Collectors.toList());
+        List<Tag> tags = store.search(attributeMap);
+        log.info("Tag search for attributes={}={}", attributes, tags);
+        return tags;
     }
 
     /**
@@ -100,8 +96,8 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Override
-    public Tag add(CreateTagRequest request) {
-        Tag created = store.addOrUpdate(request).toDto();
+    public Tag add(TagDefinition request) {
+        Tag created = store.addOrUpdate(request);
         log.info("Tag {} created.", created);
         return created;
     }
@@ -111,11 +107,11 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Override
-    public Tag addOrUpdate(CreateTagRequest request, @PathParam("name") String name) {
+    public Tag addOrUpdate(TagDefinition request, @PathParam("name") String name) {
         if (!name.equals(request.getName())) {
             throw new BadRequestException("Cannot change name.");
         }
-        Tag created = store.addOrUpdate(request).toDto();
+        Tag created = store.addOrUpdate(request);
         log.info("Tag {} created.", created);
         return created;
     }
@@ -125,7 +121,7 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     @Override
     public Response delete(@PathParam("name") String name) {
         log.info("Deleting tag with name={}", name);
-        Optional<TagEntity> optional = store.delete(name);
+        Optional<Tag> optional = store.delete(name);
         if (optional.isPresent()) {
             log.info("Tag {} removed.", optional.get());
             return Response.ok().build();

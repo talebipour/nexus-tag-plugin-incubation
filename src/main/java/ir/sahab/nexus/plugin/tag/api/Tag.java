@@ -1,39 +1,27 @@
 package ir.sahab.nexus.plugin.tag.api;
 
 import java.util.Date;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Represents a tag which can be created using REST API. This class is meant to
  * be serialized by Jackson and to be used in REST API.
  */
-public class Tag {
-
-    private String name;
+public class Tag extends TagDefinition {
 
     private Date firstCreated;
 
     private Date lastUpdated;
 
-    private Map<String, String> attributes = new HashMap<>();
-
     public Tag() {
     }
 
-    public Tag(String name, Map<String, String> attributes, Date firstCreated, Date lastUpdated) {
-        this.name = name;
+    public Tag(String name, Map<String, String> attributes, List<AssociatedComponent> components, Date firstCreated,
+            Date lastUpdated) {
+        super(name, attributes, components);
         this.firstCreated = firstCreated;
         this.lastUpdated = lastUpdated;
-        this.attributes = attributes;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public Date getFirstCreated() {
@@ -52,17 +40,9 @@ public class Tag {
         this.lastUpdated = lastUpdated;
     }
 
-    public Map<String, String> getAttributes() {
-        return attributes;
-    }
-
-    public void setAttributes(Map<String, String> attributes) {
-        this.attributes = attributes;
-    }
-
     @Override
     public String toString() {
         return "Tag{name='" + name + ", firstCreated='" + firstCreated + ", lastUpdated='" + lastUpdated
-                + "', attributes=" + attributes + '}';
+                + "', attributes=" + attributes + "', components=" + components + '}';
     }
 }
