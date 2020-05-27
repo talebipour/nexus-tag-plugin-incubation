@@ -8,7 +8,10 @@ import ir.sahab.dockercomposer.DockerCompose;
 import ir.sahab.dockercomposer.WaitFor;
 import ir.sahab.nexus.plugin.tag.api.TagDefinition.AssociatedComponent;
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -18,10 +21,12 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.Response.Status.Family;
+import org.apache.commons.codec.binary.Base64;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
 import org.junit.After;
 import org.junit.Before;
@@ -33,30 +38,31 @@ public class IntegrationTest {
 
     private static final String CHANGE_ID = "Change-Id";
     private static final String STATUS = "Status";
+    public static final String USERNAME = "admin";
+    public static final String PASSWORD = "admin123";
 
     @ClassRule
     public static DockerCompose compose = DockerCompose.builder()
             .file("/nexus.yml")
             .projectName("nexus-tag-plugin-test")
-            // .forceRecreate()
+            .forceRecreate()
             .afterStart(WaitFor.portOpen("nexus", 8081, 1_200_000))
             .build();
 
     private Client client;
     private WebTarget target;
 
-    private List<AssociatedComponent> components;
+    private AssociatedComponent component1;
+    private AssociatedComponent component2;
 
     @Before
     public void setup() {
         client = ClientBuilder.newClient();
         target = client.target("http://nexus:8081/service/rest" + APIConstants.V1_API_PREFIX);
-
-        components = new ArrayList<>();
-        components.add(new AssociatedComponent("repo1", "gr1", "comp1", "1"));
-        components.add(new AssociatedComponent("repo2", null, "comp2", "2"));
-        //TODO: Configure upload relams before
-        components.forEach(this::createComponentInRepo);
+        component1 = new AssociatedComponent("maven-releases", "gr1", "comp1", randomAlphanumeric(5));
+        uploadComponent(component1);
+        component2 = new AssociatedComponent("maven-releases", "gr2", "comp2", randomAlphanumeric(5));
+        uploadComponent(component2);
     }
 
 
@@ -65,19 +71,29 @@ public class IntegrationTest {
         client.close();
     }
 
-    private void createComponentInRepo(AssociatedComponent component) {
+    private void uploadComponent(AssociatedComponent component) {
         MultipartFormDataOutput output = new MultipartFormDataOutput();
-        output.addFormData("maven2.groupId", "group.test", MediaType.TEXT_PLAIN_TYPE);
-        output.addFormData("maven2.artifactId", "test-artifact", MediaType.TEXT_PLAIN_TYPE);
-        output.addFormData("maven2.version=", randomAlphanumeric(5), MediaType.TEXT_PLAIN_TYPE);
+        output.addFormData("maven2.groupId", component.getGroup(), MediaType.TEXT_PLAIN_TYPE);
+        output.addFormData("maven2.artifactId", component.getName(), MediaType.TEXT_PLAIN_TYPE);
+        output.addFormData("maven2.version", component.getVersion(), MediaType.TEXT_PLAIN_TYPE);
         output.addFormData("maven2.asset1.extension", "jar", MediaType.TEXT_PLAIN_TYPE);
         ByteArrayInputStream inputStream = new ByteArrayInputStream(randomAlphanumeric(100).getBytes());
         output.addFormData("maven2.asset1", inputStream, MediaType.APPLICATION_OCTET_STREAM_TYPE, "test-artifact.jar");
 
-        Response response = target.path("components").queryParam("repository", "maven-releases")
+        Response response = target.path("components").queryParam("repository", component.getRepository())
                 .request()
+                .header(HttpHeaders.AUTHORIZATION, authorizationHeader())
                 .post(Entity.entity(output, MediaType.MULTIPART_FORM_DATA_TYPE));
         assertEquals(Family.SUCCESSFUL, response.getStatusInfo().getFamily());
+    }
+
+    /**
+     * @return authorization header of basic authentication
+     */
+    private static String authorizationHeader() {
+        String auth = USERNAME + ":" + PASSWORD;
+        byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(StandardCharsets.ISO_8859_1));
+        return "Basic " + new String(encodedAuth);
     }
 
     @Test
@@ -87,7 +103,7 @@ public class IntegrationTest {
         attributes.put(STATUS, "failed");
         attributes.put("Commit-Id", randomAlphanumeric(20));
 
-        TagDefinition tag = new TagDefinition(randomAlphanumeric(5), attributes, components);
+        TagDefinition tag = new TagDefinition(randomAlphanumeric(5), attributes, Arrays.asList(component1));
 
         // Create Tag
         Response response = target.path("tag").request().post(Entity.entity(tag, MediaType.APPLICATION_JSON_TYPE));
@@ -111,6 +127,7 @@ public class IntegrationTest {
 
         // Update tag
         tag.getAttributes().put(STATUS, "successful");
+        tag.getComponents().add(component2);
         response = target.path("tag/" + tag.getName())
                 .request()
                 .put(Entity.entity(tag, MediaType.APPLICATION_JSON_TYPE));
