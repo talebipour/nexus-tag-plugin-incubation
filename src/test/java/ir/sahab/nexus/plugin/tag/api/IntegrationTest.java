@@ -28,7 +28,6 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.sonatype.nexus.rest.APIConstants;
 
-
 public class IntegrationTest {
 
     private static final String CHANGE_ID = "Change-Id";
@@ -60,7 +59,7 @@ public class IntegrationTest {
         Map<String, String> attributes = new HashMap<>();
         attributes.put(CHANGE_ID, randomAlphanumeric(20));
         attributes.put("Commit-Id", randomAlphanumeric(20));
-        Tag tag = new Tag(randomAlphabetic(5), randomAlphanumeric(5), attributes);
+        CreateTagRequest tag = new CreateTagRequest(randomAlphabetic(5), randomAlphanumeric(5), attributes);
 
 
         // Create Tag
@@ -99,7 +98,7 @@ public class IntegrationTest {
         assertEquals(Status.NOT_FOUND.getStatusCode(), response.getStatusInfo().getStatusCode());
     }
 
-    private void assertTagEquals(Tag expected, Tag actual) {
+    private void assertTagEquals(CreateTagRequest expected, Tag actual) {
         assertEquals(expected.getProject(), actual.getProject());
         assertEquals(expected.getName(), actual.getName());
         assertEquals(expected.getAttributes(), actual.getAttributes());

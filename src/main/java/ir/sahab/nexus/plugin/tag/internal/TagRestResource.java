@@ -2,6 +2,7 @@ package ir.sahab.nexus.plugin.tag.internal;
 
 import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
 
+import ir.sahab.nexus.plugin.tag.api.CreateTagRequest;
 import ir.sahab.nexus.plugin.tag.api.Tag;
 import ir.sahab.nexus.plugin.tag.api.TagRestResourceDoc;
 
@@ -103,11 +104,8 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Override
-    public Tag add(Tag tag) {
-        if (tag.getId() != null) {
-            throw new BadRequestException("id must be null.");
-        }
-        Tag created = store.add(TagEntity.fromDto(tag)).toDto();
+    public Tag add(CreateTagRequest request) {
+        Tag created = store.add(TagEntity.forCreateRequest(request)).toDto();
         log.info("Tag {} created.", created);
         return created;
     }

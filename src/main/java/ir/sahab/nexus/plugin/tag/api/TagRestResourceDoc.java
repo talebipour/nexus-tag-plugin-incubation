@@ -32,8 +32,8 @@ public interface TagRestResourceDoc {
             String attributes);
 
     @POST
-    @ApiOperation("Create given tag")
-    Tag add(Tag tag);
+    @ApiOperation("Creates a new tag")
+    Tag add(CreateTagRequest request);
 
     @DELETE
     @ApiResponses(value = {

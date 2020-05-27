@@ -49,7 +49,6 @@ public class TagEntityAdapter extends IterableEntityAdapter<TagEntity> {
         type.createIndex(NAME_INDEX, INDEX_TYPE.NOTUNIQUE_HASH_INDEX, NAME_FIELD);
         type.createIndex(PROJECT_INDEX, INDEX_TYPE.NOTUNIQUE_HASH_INDEX, PROJECT_FIELD);
         type.createIndex(CREATION_DATE_FIELD, INDEX_TYPE.NOTUNIQUE, CREATION_DATE_FIELD);
-
     }
 
     @Override

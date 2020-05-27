@@ -1,5 +1,6 @@
 package ir.sahab.nexus.plugin.tag.internal;
 
+import ir.sahab.nexus.plugin.tag.api.CreateTagRequest;
 import ir.sahab.nexus.plugin.tag.api.Tag;
 import java.util.Date;
 import org.sonatype.nexus.common.entity.AbstractEntity;
@@ -70,10 +71,8 @@ class TagEntity extends AbstractEntity {
         return dto;
     }
 
-    public static TagEntity fromDto(Tag tag) {
-        TagEntity entity = new TagEntity(tag.getProject(), tag.getName(), tag.getAttributes());
-        entity.setCreationDate(tag.getCreationDate());
-        return entity;
+    public static TagEntity forCreateRequest(CreateTagRequest tag) {
+        return new TagEntity(tag.getProject(), tag.getName(), tag.getAttributes());
     }
 
     @Override
