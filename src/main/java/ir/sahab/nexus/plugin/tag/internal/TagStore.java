@@ -38,6 +38,7 @@ public class TagStore extends StateGuardLifecycleSupport {
     protected void doStart() {
         try (ODatabaseDocumentTx tx = dbProvider.get().acquire()) {
             entityAdapter.register(tx);
+            log.info("Tag entity adapter registered.");
         }
     }
 
