@@ -14,13 +14,17 @@ public class Tag {
 
     private Date firstCreated;
 
+    private Date lastUpdated;
+
     private Map<String, String> attributes = new HashMap<>();
 
     public Tag() {
     }
 
-    public Tag(String name, Map<String, String> attributes) {
+    public Tag(String name, Map<String, String> attributes, Date firstCreated, Date lastUpdated) {
         this.name = name;
+        this.firstCreated = firstCreated;
+        this.lastUpdated = lastUpdated;
         this.attributes = attributes;
     }
 
@@ -40,6 +44,14 @@ public class Tag {
         this.firstCreated = firstCreated;
     }
 
+    public Date getLastUpdated() {
+        return lastUpdated;
+    }
+
+    public void setLastUpdated(Date lastUpdated) {
+        this.lastUpdated = lastUpdated;
+    }
+
     public Map<String, String> getAttributes() {
         return attributes;
     }
@@ -50,6 +62,7 @@ public class Tag {
 
     @Override
     public String toString() {
-        return "Tag{name='" + name + ", firstCreated='" + firstCreated + "', attributes=" + attributes + '}';
+        return "Tag{name='" + name + ", firstCreated='" + firstCreated + ", lastUpdated='" + lastUpdated
+                + "', attributes=" + attributes + '}';
     }
 }

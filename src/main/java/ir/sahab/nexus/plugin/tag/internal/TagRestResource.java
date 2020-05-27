@@ -22,6 +22,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -29,6 +30,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+
+import org.jboss.resteasy.annotations.Body;
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.rest.Resource;
 /**
@@ -102,7 +105,21 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     @Produces(MediaType.APPLICATION_JSON)
     @Override
     public Tag add(CreateTagRequest request) {
-        Tag created = store.add(TagEntity.forCreateRequest(request)).toDto();
+        Tag created = store.addOrUpdate(request).toDto();
+        log.info("Tag {} created.", created);
+        return created;
+    }
+
+    @PUT
+    @Path("/tag/{name}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Override
+    public Tag addOrUpdate(CreateTagRequest request, @PathParam("name") String name) {
+        if (!name.equals(request.getName())) {
+            throw new BadRequestException("Cannot change name.");
+        }
+        Tag created = store.addOrUpdate(request).toDto();
         log.info("Tag {} created.", created);
         return created;
     }

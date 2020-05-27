@@ -31,6 +31,7 @@ import org.sonatype.nexus.rest.APIConstants;
 public class IntegrationTest {
 
     private static final String CHANGE_ID = "Change-Id";
+    private static final String STATUS = "Status";
 
     @ClassRule
     public static DockerCompose compose = DockerCompose.builder()
@@ -55,18 +56,19 @@ public class IntegrationTest {
     }
 
     @Test
-    public void test() {
+    public void testCrud() {
         Map<String, String> attributes = new HashMap<>();
         attributes.put(CHANGE_ID, randomAlphanumeric(20));
+        attributes.put(STATUS, "failed");
         attributes.put("Commit-Id", randomAlphanumeric(20));
         CreateTagRequest tag = new CreateTagRequest(randomAlphanumeric(5), attributes);
-
 
         // Create Tag
         Response response = target.path("tag").request().post(Entity.entity(tag, MediaType.APPLICATION_JSON_TYPE));
         assertEquals(Family.SUCCESSFUL, response.getStatusInfo().getFamily());
         Tag postResponseTag = response.readEntity(Tag.class);
         assertFalse(new Date().before(postResponseTag.getFirstCreated()));
+        assertEquals(postResponseTag.getFirstCreated(), postResponseTag.getLastUpdated());
         assertTagEquals(tag, postResponseTag);
 
         // Test Get by name
@@ -80,6 +82,17 @@ public class IntegrationTest {
                 .get(new GenericType<List<Tag>>() {});
         assertEquals(1, result.size());
         assertTagEquals(tag, result.get(0));
+
+        // Update tag
+        tag.getAttributes().put(STATUS, "successful");
+        response = target.path("tag/" + tag.getName())
+                .request()
+                .put(Entity.entity(tag, MediaType.APPLICATION_JSON_TYPE));
+        assertEquals(Family.SUCCESSFUL, response.getStatusInfo().getFamily());
+        Tag putResponseTag = response.readEntity(Tag.class);
+        assertEquals(postResponseTag.getFirstCreated(), putResponseTag.getFirstCreated());
+        assertFalse(new Date().before(putResponseTag.getLastUpdated()));
+        assertTagEquals(tag, putResponseTag);
 
         // Test deleting tag
         response = target.path("tag/" + tag.getName()).request().delete();

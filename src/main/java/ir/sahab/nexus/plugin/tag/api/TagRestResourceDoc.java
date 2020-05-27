@@ -5,6 +5,7 @@ import java.util.List;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.core.Response;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -29,7 +30,18 @@ public interface TagRestResourceDoc {
 
     @POST
     @ApiOperation("Creates a new tag")
+    @ApiResponses(value = {
+        @ApiResponse(code = 400, message = "Invalid request.")
+    })
     Tag add(CreateTagRequest request);
+
+    @PUT
+    @ApiOperation("Creates a new tag or updates existing one")
+    @ApiResponses(value = {
+        @ApiResponse(code = 400, message = "Invalid request.")
+    })
+    Tag addOrUpdate(CreateTagRequest request,
+            @ApiParam(value = "Name of tag to create or update", required = true) String name);
 
     @DELETE
     @ApiResponses(value = {

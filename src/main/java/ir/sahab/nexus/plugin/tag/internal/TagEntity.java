@@ -17,6 +17,8 @@ class TagEntity extends AbstractEntity {
 
     private Date firstCreated;
 
+    private Date lastUpdated;
+
     private Map<String, String> attributes = new HashMap<>();
 
     TagEntity() {
@@ -43,6 +45,14 @@ class TagEntity extends AbstractEntity {
         return firstCreated;
     }
 
+    public Date getLastUpdated() {
+        return lastUpdated;
+    }
+
+    public void setLastUpdated(Date lastUpdated) {
+        this.lastUpdated = lastUpdated;
+    }
+
     public Map<String, String> getAttributes() {
         return attributes;
     }
@@ -52,18 +62,12 @@ class TagEntity extends AbstractEntity {
     }
 
     public Tag toDto() {
-        Tag dto = new Tag(name, attributes);
-        dto.setFirstCreated(firstCreated);
-        return dto;
-    }
-
-    public static TagEntity forCreateRequest(CreateTagRequest tag) {
-        return new TagEntity(tag.getName(), tag.getAttributes());
+        return new Tag(name, attributes, firstCreated, lastUpdated);
     }
 
     @Override
     public String toString() {
-        return "Tag{name='" + name + ", firstCreated='" + firstCreated + "', attributes=" + attributes + ", metadata="
-                + getEntityMetadata() + '}';
+        return "Tag{name='" + name + ", firstCreated='" + firstCreated + ", lastUpdated='" + lastUpdated
+                + "', attributes=" + attributes + ", metadata=" + getEntityMetadata() + '}';
     }
 }

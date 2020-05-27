@@ -30,7 +30,8 @@ public class TagEntityAdapter extends IterableEntityAdapter<TagEntity> {
 
     private static final String NAME_FIELD = "name";
     private static final String ATTRIBUTES_FIELD = "attributes";
-    private static final String CREATION_DATE_FIELD = "creationDate";
+    private static final String FIRST_CREATED_FIELD = "firstCreated";
+    private static final String LAST_UPDATED_FIELD = "lastUpdated";
 
     private static final String NAME_INDEX = new OIndexNameBuilder().type(DB_CLASS).property("name").build();
 
@@ -41,11 +42,12 @@ public class TagEntityAdapter extends IterableEntityAdapter<TagEntity> {
     @Override
     protected void defineType(OClass type) {
         type.createProperty(NAME_FIELD, OType.STRING).setMandatory(true).setNotNull(true);
-        type.createProperty(CREATION_DATE_FIELD, OType.DATETIME).setMandatory(true).setNotNull(true);
+        type.createProperty(FIRST_CREATED_FIELD, OType.DATETIME).setMandatory(true).setNotNull(true);
+        type.createProperty(LAST_UPDATED_FIELD, OType.DATETIME).setMandatory(true).setNotNull(true);
         type.createProperty(ATTRIBUTES_FIELD, OType.EMBEDDEDMAP).setMandatory(true).setNotNull(true);
 
         type.createIndex(NAME_INDEX, INDEX_TYPE.UNIQUE, NAME_FIELD);
-        type.createIndex(CREATION_DATE_FIELD, INDEX_TYPE.NOTUNIQUE, CREATION_DATE_FIELD);
+        type.createIndex(LAST_UPDATED_FIELD, INDEX_TYPE.NOTUNIQUE, LAST_UPDATED_FIELD);
     }
 
     @Override
@@ -56,14 +58,16 @@ public class TagEntityAdapter extends IterableEntityAdapter<TagEntity> {
     @Override
     protected void readFields(ODocument oDocument, TagEntity tag) {
         tag.setName(oDocument.field(NAME_FIELD));
-        tag.setFirstCreated(oDocument.field(CREATION_DATE_FIELD));
+        tag.setFirstCreated(oDocument.field(FIRST_CREATED_FIELD));
+        tag.setLastUpdated(oDocument.field(LAST_UPDATED_FIELD));
         tag.setAttributes(oDocument.field(ATTRIBUTES_FIELD));
     }
 
     @Override
     protected void writeFields(ODocument oDocument, TagEntity tag) {
         oDocument.field(NAME_FIELD, tag.getName());
-        oDocument.field(CREATION_DATE_FIELD, tag.getFirstCreated());
+        oDocument.field(FIRST_CREATED_FIELD, tag.getFirstCreated());
+        oDocument.field(LAST_UPDATED_FIELD, tag.getLastUpdated());
         oDocument.field(ATTRIBUTES_FIELD, tag.getAttributes());
     }
 
@@ -113,7 +117,7 @@ public class TagEntityAdapter extends IterableEntityAdapter<TagEntity> {
                 query.append(" and");
             }
         }
-        query.append(" order by ").append(CREATION_DATE_FIELD).append(" DESC");
+        query.append(" order by ").append(LAST_UPDATED_FIELD).append(" DESC");
         return query.toString();
     }
 

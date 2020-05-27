@@ -3,13 +3,17 @@ package ir.sahab.nexus.plugin.tag.api;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * Holds fields used to create a new tag.
  */
 public class CreateTagRequest {
 
+    @NotNull
     private String name;
 
+    @NotNull
     private Map<String, String> attributes = new HashMap<>();
 
     public CreateTagRequest() {
