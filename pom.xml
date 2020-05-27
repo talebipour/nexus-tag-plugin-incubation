@@ -98,7 +98,7 @@
     </build>
     <repositories>
         <repository>
-            <id>external:rso-public-grid</id>
+            <id>rso-public-grid</id>
             <url>https://repository.sonatype.org/content/groups/sonatype-public-grid/</url>
         </repository>
         <repository>

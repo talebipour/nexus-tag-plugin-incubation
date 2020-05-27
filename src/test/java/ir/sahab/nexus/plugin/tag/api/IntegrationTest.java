@@ -38,7 +38,7 @@ public class IntegrationTest {
             .file("/nexus.yml")
             .projectName("nexus-tag-plugin-test")
             .forceRecreate()
-            .afterStart(WaitFor.portOpen("nexus", 8081, 300_000))
+            .afterStart(WaitFor.portOpen("nexus", 8081, 1_200_000))
             .build();
 
     private Client client;

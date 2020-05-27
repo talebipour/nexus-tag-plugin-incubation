@@ -4,6 +4,7 @@ import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SCHEMAS;
 
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
 import com.orientechnologies.orient.core.record.impl.ODocument;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
@@ -56,7 +57,7 @@ public class TagStore extends StateGuardLifecycleSupport {
         try (ODatabaseDocumentTx tx = dbProvider.get().acquire()) {
             ODocument document = entityAdapter.addEntity(tx, tag);
             log.info("Tag {} added to database", tag);
-            return entityAdapter.readEntity(document.getIdentity());
+            return entityAdapter.transform(Collections.singleton(document)).iterator().next();
         }
     }
 
