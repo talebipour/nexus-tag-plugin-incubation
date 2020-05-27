@@ -66,7 +66,7 @@ public class IntegrationTest {
         Response response = target.path("tag").request().post(Entity.entity(tag, MediaType.APPLICATION_JSON_TYPE));
         assertEquals(Family.SUCCESSFUL, response.getStatusInfo().getFamily());
         Tag postResponseTag = response.readEntity(Tag.class);
-        assertFalse(new Date().before(postResponseTag.getCreationDate()));
+        assertFalse(new Date().before(postResponseTag.getFirstCreated()));
         assertTagEquals(tag, postResponseTag);
 
         // Test Get by name

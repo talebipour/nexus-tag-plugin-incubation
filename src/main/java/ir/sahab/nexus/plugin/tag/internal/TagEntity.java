@@ -53,7 +53,7 @@ class TagEntity extends AbstractEntity {
 
     public Tag toDto() {
         Tag dto = new Tag(name, attributes);
-        dto.setCreationDate(firstCreated);
+        dto.setFirstCreated(firstCreated);
         return dto;
     }
 

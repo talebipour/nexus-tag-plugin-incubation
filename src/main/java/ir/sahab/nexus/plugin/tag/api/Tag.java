@@ -12,7 +12,7 @@ public class Tag {
 
     private String name;
 
-    private Date creationDate;
+    private Date firstCreated;
 
     private Map<String, String> attributes = new HashMap<>();
 
@@ -32,12 +32,12 @@ public class Tag {
         this.name = name;
     }
 
-    public Date getCreationDate() {
-        return creationDate;
+    public Date getFirstCreated() {
+        return firstCreated;
     }
 
-    public void setCreationDate(Date creationDate) {
-        this.creationDate = creationDate;
+    public void setFirstCreated(Date firstCreated) {
+        this.firstCreated = firstCreated;
     }
 
     public Map<String, String> getAttributes() {
@@ -50,6 +50,6 @@ public class Tag {
 
     @Override
     public String toString() {
-        return "Tag{name='" + name + ", creationDate='" + creationDate + "', attributes=" + attributes + '}';
+        return "Tag{name='" + name + ", firstCreated='" + firstCreated + "', attributes=" + attributes + '}';
     }
 }
