@@ -28,12 +28,10 @@ public class TagEntityAdapter extends IterableEntityAdapter<TagEntity> {
     private static final String DB_CLASS = new OClassNameBuilder().type(TYPE_NAME).build();
 
     private static final String NAME_FIELD = "name";
-    private static final String PROJECT_FIELD = "project";
     private static final String ATTRIBUTES_FIELD = "attributes";
     private static final String CREATION_DATE_FIELD = "creationDate";
 
     private static final String NAME_INDEX = new OIndexNameBuilder().type(DB_CLASS).property("name").build();
-    private static final String PROJECT_INDEX = new OIndexNameBuilder().type(DB_CLASS).property(PROJECT_FIELD).build();
 
     public TagEntityAdapter() {
         super(TYPE_NAME);
@@ -41,13 +39,11 @@ public class TagEntityAdapter extends IterableEntityAdapter<TagEntity> {
 
     @Override
     protected void defineType(OClass type) {
-        type.createProperty(PROJECT_FIELD, OType.STRING).setMandatory(true).setNotNull(true);
         type.createProperty(NAME_FIELD, OType.STRING).setMandatory(true).setNotNull(true);
         type.createProperty(CREATION_DATE_FIELD, OType.DATETIME).setMandatory(true).setNotNull(true);
         type.createProperty(ATTRIBUTES_FIELD, OType.EMBEDDEDMAP).setMandatory(true).setNotNull(true);
 
-        type.createIndex(NAME_INDEX, INDEX_TYPE.NOTUNIQUE_HASH_INDEX, NAME_FIELD);
-        type.createIndex(PROJECT_INDEX, INDEX_TYPE.NOTUNIQUE_HASH_INDEX, PROJECT_FIELD);
+        type.createIndex(NAME_INDEX, INDEX_TYPE.UNIQUE, NAME_FIELD);
         type.createIndex(CREATION_DATE_FIELD, INDEX_TYPE.NOTUNIQUE, CREATION_DATE_FIELD);
     }
 
@@ -58,7 +54,6 @@ public class TagEntityAdapter extends IterableEntityAdapter<TagEntity> {
 
     @Override
     protected void readFields(ODocument oDocument, TagEntity tag) {
-        tag.setProject(oDocument.field(PROJECT_FIELD));
         tag.setName(oDocument.field(NAME_FIELD));
         tag.setCreationDate(oDocument.field(CREATION_DATE_FIELD));
         tag.setAttributes(oDocument.field(ATTRIBUTES_FIELD));
@@ -66,7 +61,6 @@ public class TagEntityAdapter extends IterableEntityAdapter<TagEntity> {
 
     @Override
     protected void writeFields(ODocument oDocument, TagEntity tag) {
-        oDocument.field(PROJECT_FIELD, tag.getProject());
         oDocument.field(NAME_FIELD, tag.getName());
         oDocument.field(CREATION_DATE_FIELD, tag.getCreationDate());
         oDocument.field(ATTRIBUTES_FIELD, tag.getAttributes());
@@ -77,16 +71,8 @@ public class TagEntityAdapter extends IterableEntityAdapter<TagEntity> {
         return Optional.ofNullable(entity);
     }
 
-    public Iterable<TagEntity> search(ODatabaseDocumentTx tx, String project, String name,
-            Map<String, String> attributes) {
+    public Iterable<TagEntity> search(ODatabaseDocumentTx tx, Map<String, String> attributes) {
         List<QueryPredicate> predicates = new ArrayList<>();
-        if (project != null) {
-            predicates.add(new QueryPredicate(PROJECT_FIELD, "=", stringLiteral(project)));
-        }
-        if (name != null) {
-            predicates.add(new QueryPredicate(NAME_FIELD, "=", stringLiteral(name)));
-        }
-
         for (Entry<String, String> entry : attributes.entrySet()) {
             String field = ATTRIBUTES_FIELD + "[" + stringLiteral(entry.getKey()) + "]";
             predicates.add(new QueryPredicate(field, "=", stringLiteral(entry.getValue())));

@@ -9,8 +9,6 @@ import java.util.Map;
  */
 public class CreateTagRequest {
 
-    private String project;
-
     private String name;
 
     private Map<String, String> attributes = new HashMap<>();
@@ -18,8 +16,7 @@ public class CreateTagRequest {
     public CreateTagRequest() {
     }
 
-    public CreateTagRequest(String project, String name, Map<String, String> attributes) {
-        this.project = project;
+    public CreateTagRequest(String name, Map<String, String> attributes) {
         this.name = name;
         this.attributes = attributes;
     }
@@ -32,14 +29,6 @@ public class CreateTagRequest {
         this.name = name;
     }
 
-    public String getProject() {
-        return project;
-    }
-
-    public void setProject(String project) {
-        this.project = project;
-    }
-
     public Map<String, String> getAttributes() {
         return attributes;
     }
@@ -50,6 +39,6 @@ public class CreateTagRequest {
 
     @Override
     public String toString() {
-        return "CreateTagRequest{project='" + project + "', name='" + name + "', attributes=" + attributes + '}';
+        return "CreateTagRequest{name='" + name + "', attributes=" + attributes + '}';
     }
 }

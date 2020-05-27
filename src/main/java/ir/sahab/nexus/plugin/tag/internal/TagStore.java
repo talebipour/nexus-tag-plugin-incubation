@@ -47,9 +47,9 @@ public class TagStore extends StateGuardLifecycleSupport {
             return entityAdapter.findById(tx, new DetachedEntityId(id));
         }
     }
-    public Iterable<TagEntity> search(String project, String name, Map<String, String> attributes) {
+    public Iterable<TagEntity> search(Map<String, String> attributes) {
         try (ODatabaseDocumentTx tx = dbProvider.get().acquire()) {
-            return entityAdapter.search(tx, project, name, attributes);
+            return entityAdapter.search(tx, attributes);
         }
     }
 

@@ -26,10 +26,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.Status;
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.rest.Resource;
@@ -68,11 +66,10 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     @Path("/tags")
     @Produces(MediaType.APPLICATION_JSON)
     @Override
-    public List<Tag> list(@QueryParam("project") String project, @QueryParam("name") String name,
-            @QueryParam("attributes") String attributes) {
+    public List<Tag> list(@QueryParam("attributes") String attributes) {
         Map<String, String> attributeMap = decodeAttributes(attributes);
-        Iterable<TagEntity> entities = store.search(project, name, attributeMap);
-        log.info("Tag search for (project={}, name={}, attributes={})={}", project, name, attributes, entities);
+        Iterable<TagEntity> entities = store.search(attributeMap);
+        log.info("Tag search for attributes={}={}", attributes, entities);
         return StreamSupport.stream(entities.spliterator(), false)
                 .map(TagEntity::toDto)
                 .collect(Collectors.toList());

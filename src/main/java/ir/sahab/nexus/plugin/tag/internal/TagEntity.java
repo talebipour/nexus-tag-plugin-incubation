@@ -13,8 +13,6 @@ import java.util.Map;
  */
 class TagEntity extends AbstractEntity {
 
-    private String project;
-
     private String name;
 
     private Date creationDate;
@@ -24,8 +22,7 @@ class TagEntity extends AbstractEntity {
     TagEntity() {
     }
 
-    TagEntity(String project, String name, Map<String, String> attributes) {
-        this.project = project;
+    TagEntity(String name, Map<String, String> attributes) {
         this.name = name;
         this.attributes = attributes;
     }
@@ -36,14 +33,6 @@ class TagEntity extends AbstractEntity {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getProject() {
-        return project;
-    }
-
-    public void setProject(String project) {
-        this.project = project;
     }
 
     public void setCreationDate(Date creationDate) {
@@ -63,7 +52,7 @@ class TagEntity extends AbstractEntity {
     }
 
     public Tag toDto() {
-        Tag dto = new Tag(project, name, attributes);
+        Tag dto = new Tag(name, attributes);
         if (getEntityMetadata() != null) {
             dto.setId(getEntityMetadata().getId().getValue());
         }
@@ -72,12 +61,12 @@ class TagEntity extends AbstractEntity {
     }
 
     public static TagEntity forCreateRequest(CreateTagRequest tag) {
-        return new TagEntity(tag.getProject(), tag.getName(), tag.getAttributes());
+        return new TagEntity(tag.getName(), tag.getAttributes());
     }
 
     @Override
     public String toString() {
-        return "Tag{project='" + project + "', name='" + name + ", creationDate='" + creationDate +
-               "', attributes=" + attributes + ", metadata=" + getEntityMetadata() + '}';
+        return "Tag{name='" + name + ", creationDate='" + creationDate + "', attributes=" + attributes + ", metadata="
+                + getEntityMetadata() + '}';
     }
 }

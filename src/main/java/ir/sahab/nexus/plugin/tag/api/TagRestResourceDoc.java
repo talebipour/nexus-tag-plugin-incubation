@@ -6,8 +6,6 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -25,10 +23,8 @@ public interface TagRestResourceDoc {
     Response getById(@ApiParam(value = "ID of tag to retrieve", required = true) String id);
 
     @GET
-    @ApiOperation("List tags with given criteria")
-    List<Tag> list(@ApiParam("Filters tags with given project") String project,
-            @ApiParam("Filters tags with given name") String name,
-            @ApiParam("Comma separated attribute values to search in format key1=value1[,key2=value2,...]")
+    @ApiOperation("List tags. Result may be filtered by optional attributes")
+    List<Tag> list(@ApiParam("Comma separated attribute values to search in format key1=value1[,key2=value2,...]")
             String attributes);
 
     @POST

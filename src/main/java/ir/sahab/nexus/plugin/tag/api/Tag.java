@@ -12,8 +12,6 @@ public class Tag {
 
     private String id;
 
-    private String project;
-
     private String name;
 
     private Date creationDate;
@@ -23,8 +21,7 @@ public class Tag {
     public Tag() {
     }
 
-    public Tag(String project, String name, Map<String, String> attributes) {
-        this.project = project;
+    public Tag(String name, Map<String, String> attributes) {
         this.name = name;
         this.attributes = attributes;
     }
@@ -45,14 +42,6 @@ public class Tag {
         this.name = name;
     }
 
-    public String getProject() {
-        return project;
-    }
-
-    public void setProject(String project) {
-        this.project = project;
-    }
-
     public Date getCreationDate() {
         return creationDate;
     }
@@ -71,7 +60,7 @@ public class Tag {
 
     @Override
     public String toString() {
-        return "Tag{id='" + id + "', project='" + project + "', name='" + name + ", creationDate='" + creationDate +
+        return "Tag{id='" + id +"', name='" + name + ", creationDate='" + creationDate +
                "', attributes=" + attributes + '}';
     }
 }

@@ -59,7 +59,7 @@ public class IntegrationTest {
         Map<String, String> attributes = new HashMap<>();
         attributes.put(CHANGE_ID, randomAlphanumeric(20));
         attributes.put("Commit-Id", randomAlphanumeric(20));
-        CreateTagRequest tag = new CreateTagRequest(randomAlphabetic(5), randomAlphanumeric(5), attributes);
+        CreateTagRequest tag = new CreateTagRequest(randomAlphanumeric(5), attributes);
 
 
         // Create Tag
@@ -74,17 +74,8 @@ public class IntegrationTest {
         Tag retrieved = target.path("tag/" + postResponseTag.getId()).request().get(Tag.class);
         assertTagEquals(tag, retrieved);
 
-        // Test Search by project and name
+        // Test search by attribute
         List<Tag> result = target.path("tags")
-                .queryParam("project", tag.getProject())
-                .queryParam("name", tag.getName())
-                .request()
-                .get(new GenericType<List<Tag>>() {});
-        assertEquals(1, result.size());
-        assertTagEquals(tag, result.get(0));
-
-        // Test Search by attribute
-        result = target.path("tags")
                 .queryParam("attributes", CHANGE_ID + "=" + tag.getAttributes().get(CHANGE_ID))
                 .request()
                 .get(new GenericType<List<Tag>>() {});
@@ -99,7 +90,6 @@ public class IntegrationTest {
     }
 
     private void assertTagEquals(CreateTagRequest expected, Tag actual) {
-        assertEquals(expected.getProject(), actual.getProject());
         assertEquals(expected.getName(), actual.getName());
         assertEquals(expected.getAttributes(), actual.getAttributes());
     }
