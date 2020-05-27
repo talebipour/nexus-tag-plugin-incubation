@@ -56,7 +56,7 @@ public class IntegrationTest {
         components.add(new AssociatedComponent("repo1", "gr1", "comp1", "1"));
         components.add(new AssociatedComponent("repo2", null, "comp2", "2"));
         //TODO: Configure upload relams before
-        components.forEach(this::uploadComponent);
+        components.forEach(this::createComponentInRepo);
     }
 
 
@@ -65,7 +65,7 @@ public class IntegrationTest {
         client.close();
     }
 
-    private void uploadComponent(AssociatedComponent component) {
+    private void createComponentInRepo(AssociatedComponent component) {
         MultipartFormDataOutput output = new MultipartFormDataOutput();
         output.addFormData("maven2.groupId", "group.test", MediaType.TEXT_PLAIN_TYPE);
         output.addFormData("maven2.artifactId", "test-artifact", MediaType.TEXT_PLAIN_TYPE);
