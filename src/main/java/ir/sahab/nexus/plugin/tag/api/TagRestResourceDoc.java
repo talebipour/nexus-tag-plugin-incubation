@@ -16,11 +16,11 @@ import io.swagger.annotations.ApiResponses;
 public interface TagRestResourceDoc {
 
     @GET
-    @ApiOperation("Get a single tag with ID")
+    @ApiOperation("Get a single tag with given name")
     @ApiResponses(value = {
         @ApiResponse(code = 404, message = "Tag does not exists")
     })
-    Response getById(@ApiParam(value = "ID of tag to retrieve", required = true) String id);
+    Response getByName(@ApiParam(value = "name of tag to retrieve", required = true) String name);
 
     @GET
     @ApiOperation("List tags. Result may be filtered by optional attributes")
@@ -35,5 +35,5 @@ public interface TagRestResourceDoc {
     @ApiResponses(value = {
         @ApiResponse(code = 404, message = "Tag does not exists")
     })
-    Response delete(@ApiParam(value = "ID of tag to retrieve", required = true) String id);
+    Response delete(@ApiParam(value = "Name of tag to retrieve", required = true) String name);
 }

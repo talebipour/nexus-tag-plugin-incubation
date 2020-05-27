@@ -42,9 +42,9 @@ public class TagStore extends StateGuardLifecycleSupport {
         }
     }
 
-    public Optional<TagEntity> findById(String id) {
+    public Optional<TagEntity> findByName(String name) {
         try (ODatabaseDocumentTx tx = dbProvider.get().acquire()) {
-            return entityAdapter.findById(tx, new DetachedEntityId(id));
+            return entityAdapter.findByName(tx, name);
         }
     }
     public Iterable<TagEntity> search(Map<String, String> attributes) {
@@ -54,7 +54,8 @@ public class TagStore extends StateGuardLifecycleSupport {
     }
 
     public TagEntity add(TagEntity tag) {
-        tag.setCreationDate(new Date());
+        Date currentDate = new Date();
+        tag.setFirstCreated(currentDate);
         try (ODatabaseDocumentTx tx = dbProvider.get().acquire()) {
             ODocument document = entityAdapter.addEntity(tx, tag);
             log.info("Tag {} added to database", tag);
@@ -63,12 +64,12 @@ public class TagStore extends StateGuardLifecycleSupport {
     }
 
     /**
-     * @param id id of tag to delete
+     * @param name name of tag to delete
      * @return remove entity if exists, otherwise null.
      */
-    public Optional<TagEntity> delete(String id) {
+    public Optional<TagEntity> delete(String name) {
         try (ODatabaseDocumentTx tx = dbProvider.get().acquire()) {
-            Optional<TagEntity> optional = entityAdapter.findById(tx, new DetachedEntityId(id));
+            Optional<TagEntity> optional = entityAdapter.findByName(tx, name);
             optional.ifPresent(entity -> entityAdapter.deleteEntity(tx, entity));
             return optional;
         }

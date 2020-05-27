@@ -3,10 +3,10 @@ package ir.sahab.nexus.plugin.tag.internal;
 import ir.sahab.nexus.plugin.tag.api.CreateTagRequest;
 import ir.sahab.nexus.plugin.tag.api.Tag;
 import java.util.Date;
-import org.sonatype.nexus.common.entity.AbstractEntity;
-
 import java.util.HashMap;
 import java.util.Map;
+import org.sonatype.nexus.common.entity.AbstractEntity;
+
 
 /**
  * Entity class used to persist tag instances.
@@ -15,7 +15,7 @@ class TagEntity extends AbstractEntity {
 
     private String name;
 
-    private Date creationDate;
+    private Date firstCreated;
 
     private Map<String, String> attributes = new HashMap<>();
 
@@ -35,12 +35,12 @@ class TagEntity extends AbstractEntity {
         this.name = name;
     }
 
-    public void setCreationDate(Date creationDate) {
-        this.creationDate = creationDate;
+    public void setFirstCreated(Date firstCreated) {
+        this.firstCreated = firstCreated;
     }
 
-    public Date getCreationDate() {
-        return creationDate;
+    public Date getFirstCreated() {
+        return firstCreated;
     }
 
     public Map<String, String> getAttributes() {
@@ -53,10 +53,7 @@ class TagEntity extends AbstractEntity {
 
     public Tag toDto() {
         Tag dto = new Tag(name, attributes);
-        if (getEntityMetadata() != null) {
-            dto.setId(getEntityMetadata().getId().getValue());
-        }
-        dto.setCreationDate(creationDate);
+        dto.setCreationDate(firstCreated);
         return dto;
     }
 
@@ -66,7 +63,7 @@ class TagEntity extends AbstractEntity {
 
     @Override
     public String toString() {
-        return "Tag{name='" + name + ", creationDate='" + creationDate + "', attributes=" + attributes + ", metadata="
+        return "Tag{name='" + name + ", firstCreated='" + firstCreated + "', attributes=" + attributes + ", metadata="
                 + getEntityMetadata() + '}';
     }
 }

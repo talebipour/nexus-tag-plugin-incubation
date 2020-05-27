@@ -1,6 +1,5 @@
 package ir.sahab.nexus.plugin.tag.api;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 

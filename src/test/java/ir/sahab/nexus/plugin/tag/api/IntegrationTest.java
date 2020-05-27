@@ -66,12 +66,11 @@ public class IntegrationTest {
         Response response = target.path("tag").request().post(Entity.entity(tag, MediaType.APPLICATION_JSON_TYPE));
         assertEquals(Family.SUCCESSFUL, response.getStatusInfo().getFamily());
         Tag postResponseTag = response.readEntity(Tag.class);
-        assertNotNull(postResponseTag.getId());
         assertFalse(new Date().before(postResponseTag.getCreationDate()));
         assertTagEquals(tag, postResponseTag);
 
-        // Test Get by Id
-        Tag retrieved = target.path("tag/" + postResponseTag.getId()).request().get(Tag.class);
+        // Test Get by name
+        Tag retrieved = target.path("tag/" + tag.getName()).request().get(Tag.class);
         assertTagEquals(tag, retrieved);
 
         // Test search by attribute
@@ -83,9 +82,9 @@ public class IntegrationTest {
         assertTagEquals(tag, result.get(0));
 
         // Test deleting tag
-        response = target.path("tag/" + postResponseTag.getId()).request().delete();
+        response = target.path("tag/" + tag.getName()).request().delete();
         assertEquals(Family.SUCCESSFUL, response.getStatusInfo().getFamily());
-        response = target.path("tag/" + postResponseTag.getId()).request().get();
+        response = target.path("tag/" + tag.getName()).request().get();
         assertEquals(Status.NOT_FOUND.getStatusCode(), response.getStatusInfo().getStatusCode());
     }
 

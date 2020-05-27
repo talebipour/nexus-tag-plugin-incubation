@@ -10,8 +10,6 @@ import java.util.Map;
  */
 public class Tag {
 
-    private String id;
-
     private String name;
 
     private Date creationDate;
@@ -24,14 +22,6 @@ public class Tag {
     public Tag(String name, Map<String, String> attributes) {
         this.name = name;
         this.attributes = attributes;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public String getName() {
@@ -60,7 +50,6 @@ public class Tag {
 
     @Override
     public String toString() {
-        return "Tag{id='" + id +"', name='" + name + ", creationDate='" + creationDate +
-               "', attributes=" + attributes + '}';
+        return "Tag{name='" + name + ", creationDate='" + creationDate + "', attributes=" + attributes + '}';
     }
 }

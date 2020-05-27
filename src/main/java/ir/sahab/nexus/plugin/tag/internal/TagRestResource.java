@@ -47,18 +47,18 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     }
 
     @GET
-    @Path("/tag/{id}")
+    @Path("/tag/{name}")
     @Produces(MediaType.APPLICATION_JSON)
     @Override
-    public Response getById(@PathParam("id") String id) {
-        log.info("Finding tag with id={}", id);
-        Optional<TagEntity> optional = store.findById(id);
+    public Response getByName(@PathParam("name") String name) {
+        log.info("Finding tag with name={}", name);
+        Optional<TagEntity> optional = store.findByName(name);
         if (optional.isPresent()) {
             Tag found = optional.get().toDto();
             log.info("Tag {} found.", found);
             return Response.ok(found, MediaType.APPLICATION_JSON_TYPE).build();
         }
-        log.info("Tag with id={} not found.", id);
+        log.info("Tag with name={} not found.", name);
         return Response.status(Status.NOT_FOUND).build();
     }
 
@@ -108,16 +108,16 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     }
 
     @DELETE
-    @Path("/tag/{id}")
+    @Path("/tag/{name}")
     @Override
-    public Response delete(@PathParam("id") String id) {
-        log.info("Finding tag with id={}", id);
-        Optional<TagEntity> optional = store.delete(id);
+    public Response delete(@PathParam("name") String name) {
+        log.info("Deleting tag with name={}", name);
+        Optional<TagEntity> optional = store.delete(name);
         if (optional.isPresent()) {
             log.info("Tag {} removed.", optional.get());
             return Response.ok().build();
         }
-        log.info("Unable to delete tag with id={}, tag does not exist.", id);
+        log.info("Unable to delete tag with name={}, tag does not exist.", name);
         return Response.status(Status.NOT_FOUND).build();
     }
 

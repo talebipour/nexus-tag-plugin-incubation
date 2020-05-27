@@ -1,6 +1,8 @@
 package ir.sahab.nexus.plugin.tag.internal;
 
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
+import com.orientechnologies.orient.core.db.record.OIdentifiable;
+import com.orientechnologies.orient.core.index.OIndex;
 import com.orientechnologies.orient.core.metadata.schema.OClass;
 import com.orientechnologies.orient.core.metadata.schema.OClass.INDEX_TYPE;
 import com.orientechnologies.orient.core.metadata.schema.OType;
@@ -12,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Map.Entry;
-
 import org.sonatype.nexus.common.entity.EntityId;
 import org.sonatype.nexus.orient.OClassNameBuilder;
 import org.sonatype.nexus.orient.OIndexNameBuilder;
@@ -55,20 +56,24 @@ public class TagEntityAdapter extends IterableEntityAdapter<TagEntity> {
     @Override
     protected void readFields(ODocument oDocument, TagEntity tag) {
         tag.setName(oDocument.field(NAME_FIELD));
-        tag.setCreationDate(oDocument.field(CREATION_DATE_FIELD));
+        tag.setFirstCreated(oDocument.field(CREATION_DATE_FIELD));
         tag.setAttributes(oDocument.field(ATTRIBUTES_FIELD));
     }
 
     @Override
     protected void writeFields(ODocument oDocument, TagEntity tag) {
         oDocument.field(NAME_FIELD, tag.getName());
-        oDocument.field(CREATION_DATE_FIELD, tag.getCreationDate());
+        oDocument.field(CREATION_DATE_FIELD, tag.getFirstCreated());
         oDocument.field(ATTRIBUTES_FIELD, tag.getAttributes());
     }
 
-    public Optional<TagEntity> findById(ODatabaseDocumentTx tx, EntityId id) {
-        TagEntity entity = transformEntity(document(tx, id));
-        return Optional.ofNullable(entity);
+    public Optional<TagEntity> findByName(ODatabaseDocumentTx tx, String name) {
+        OIndex<?> nameIndex = tx.getMetadata().getIndexManager().getIndex(NAME_INDEX);
+        OIdentifiable identifiable = (OIdentifiable) nameIndex.get(name);
+        if (identifiable == null) {
+            return Optional.empty();
+        }
+        return Optional.of(transformEntity(identifiable.getRecord()));
     }
 
     public Iterable<TagEntity> search(ODatabaseDocumentTx tx, Map<String, String> attributes) {
