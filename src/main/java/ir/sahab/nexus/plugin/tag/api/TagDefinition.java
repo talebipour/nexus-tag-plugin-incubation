@@ -10,14 +10,14 @@ import org.hibernate.validator.constraints.NotBlank;
  */
 public class TagDefinition {
 
-    @NotNull
-    @NotBlank
+    @NotNull(message = "Tag name can't be null.")
+    @NotBlank(message = "Tag name can't be blank/empty.")
     protected String name;
 
-    @NotNull
+    @NotNull(message = "Tag attributes can't be null.")
     protected Map<String, String> attributes;
 
-    @NotNull
+    @NotNull(message = "Tag components can't be null.")
     protected List<AssociatedComponent> components;
 
     public TagDefinition() {

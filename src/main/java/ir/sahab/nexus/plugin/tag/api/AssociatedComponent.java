@@ -8,15 +8,15 @@ import javax.validation.constraints.NotNull;
  */
 public class AssociatedComponent {
 
-    @NotNull
+    @NotNull(message = "Components repository can't be null.")
     private String repository;
 
     private String group;
 
-    @NotNull
+    @NotNull(message = "Components name can't be null.")
     private String name;
 
-    @NotNull
+    @NotNull(message = "Components version can't be null.")
     private String version;
 
 

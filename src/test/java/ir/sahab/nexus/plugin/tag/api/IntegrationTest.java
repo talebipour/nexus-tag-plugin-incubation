@@ -9,6 +9,7 @@ import ir.sahab.dockercomposer.WaitFor;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -103,7 +104,7 @@ public class IntegrationTest {
         TagDefinition tag = new TagDefinition(randomAlphanumeric(5), attributes, Arrays.asList(component1));
 
         // Create Tag
-        Response response = target.path("tag").request().post(Entity.entity(tag, MediaType.APPLICATION_JSON_TYPE));
+        Response response = addTag(tag);
         assertEquals(Family.SUCCESSFUL, response.getStatusInfo().getFamily());
         Tag postResponseTag = response.readEntity(Tag.class);
         assertFalse(new Date().before(postResponseTag.getFirstCreated()));
@@ -125,10 +126,7 @@ public class IntegrationTest {
         // Update tag
         tag.getAttributes().put(STATUS, "successful");
         tag.setComponents(Arrays.asList(component1, component2));
-        response = target.path("tag/" + tag.getName())
-                .request()
-                .put(Entity.entity(tag, MediaType.APPLICATION_JSON_TYPE));
-        assertEquals(Family.SUCCESSFUL, response.getStatusInfo().getFamily());
+        response = updateTag(tag);
         Tag putResponseTag = response.readEntity(Tag.class);
         assertEquals(postResponseTag.getFirstCreated(), putResponseTag.getFirstCreated());
         assertFalse(new Date().before(putResponseTag.getLastUpdated()));
@@ -138,7 +136,30 @@ public class IntegrationTest {
         response = target.path("tag/" + tag.getName()).request().delete();
         assertEquals(Family.SUCCESSFUL, response.getStatusInfo().getFamily());
         response = target.path("tag/" + tag.getName()).request().get();
-        assertEquals(Status.NOT_FOUND.getStatusCode(), response.getStatusInfo().getStatusCode());
+        assertEquals(Status.NOT_FOUND.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    public void testValidation() {
+        TagDefinition nullName = new TagDefinition();
+        nullName.setAttributes(Collections.emptyMap());
+        assertEquals(Status.BAD_REQUEST.getStatusCode(), addTag(nullName).getStatus());
+
+        TagDefinition emptyName = new TagDefinition();
+        nullName.setAttributes(Collections.emptyMap());
+        assertEquals(Status.BAD_REQUEST.getStatusCode(), addTag(emptyName).getStatus());
+
+        TagDefinition nullAttribute = new TagDefinition();
+        nullName.setName("name");
+        assertEquals(Status.BAD_REQUEST.getStatusCode(), addTag(nullAttribute).getStatus());
+    }
+
+    private Response addTag(TagDefinition tag) {
+        return target.path("tag").request().post(Entity.entity(tag, MediaType.APPLICATION_JSON_TYPE));
+    }
+
+    private Response updateTag(TagDefinition tag) {
+        return target.path("tag/" + tag.getName()).request().put(Entity.entity(tag, MediaType.APPLICATION_JSON_TYPE));
     }
 
     private void assertTagEquals(TagDefinition expected, Tag actual) {

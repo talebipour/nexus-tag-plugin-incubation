@@ -14,6 +14,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import javax.validation.Valid;
 import javax.validation.ValidationException;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
@@ -109,7 +110,7 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Override
-    public Tag add(TagDefinition definition) {
+    public Tag add(@Valid TagDefinition definition) {
         validateComponents(definition.getComponents());
         Tag created = tagStore.addOrUpdate(definition);
         log.info("Tag {} created.", created);
@@ -121,7 +122,7 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Override
-    public Tag addOrUpdate(TagDefinition definition, @PathParam("name") String name) {
+    public Tag addOrUpdate(@Valid TagDefinition definition, @PathParam("name") String name) {
         if (!name.equals(definition.getName())) {
             throw new BadRequestException("Cannot change name.");
         }
