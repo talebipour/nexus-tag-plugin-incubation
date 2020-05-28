@@ -1,11 +1,8 @@
 package ir.sahab.nexus.plugin.tag.internal;
 
-import ir.sahab.nexus.plugin.tag.api.Tag;
-import ir.sahab.nexus.plugin.tag.api.TagDefinition.AssociatedComponent;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import org.sonatype.nexus.common.entity.AbstractEntity;
 import org.sonatype.nexus.repository.storage.Component;
 

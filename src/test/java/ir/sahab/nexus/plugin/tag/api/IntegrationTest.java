@@ -6,12 +6,9 @@ import static org.junit.Assert.assertFalse;
 
 import ir.sahab.dockercomposer.DockerCompose;
 import ir.sahab.dockercomposer.WaitFor;
-import ir.sahab.nexus.plugin.tag.api.TagDefinition.AssociatedComponent;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;

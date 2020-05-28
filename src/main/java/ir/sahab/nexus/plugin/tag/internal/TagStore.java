@@ -6,7 +6,7 @@ import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
 import com.orientechnologies.orient.core.record.impl.ODocument;
 import ir.sahab.nexus.plugin.tag.api.Tag;
 import ir.sahab.nexus.plugin.tag.api.TagDefinition;
-import ir.sahab.nexus.plugin.tag.api.TagDefinition.AssociatedComponent;
+import ir.sahab.nexus.plugin.tag.api.AssociatedComponent;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,7 +22,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
-import javax.swing.RepaintManager;
 import javax.validation.ValidationException;
 
 import org.sonatype.nexus.common.app.ManagedLifecycle;
