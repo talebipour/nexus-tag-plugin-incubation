@@ -1,10 +1,11 @@
 package ir.sahab.nexus.plugin.tag.internal;
 
+import ir.sahab.nexus.plugin.tag.api.AssociatedComponent;
+import ir.sahab.nexus.plugin.tag.api.Tag;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import org.sonatype.nexus.common.entity.AbstractEntity;
-import org.sonatype.nexus.repository.storage.Component;
 
 
 /**
@@ -20,7 +21,7 @@ class TagEntity extends AbstractEntity {
 
     private Map<String, String> attributes;
 
-    private List<Component> components;
+    private List<AssociatedComponent> components;
 
     TagEntity() {
     }
@@ -62,12 +63,16 @@ class TagEntity extends AbstractEntity {
         this.attributes = attributes;
     }
 
-    public List<Component> getComponents() {
+    public List<AssociatedComponent> getComponents() {
         return components;
     }
 
-    public void setComponents(List<Component> components) {
+    public void setComponents(List<AssociatedComponent> components) {
         this.components = components;
+    }
+
+    public Tag toDto() {
+        return new Tag(name, attributes, components, firstCreated, lastUpdated);
     }
 
     @Override

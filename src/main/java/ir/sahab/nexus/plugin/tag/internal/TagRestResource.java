@@ -2,6 +2,7 @@ package ir.sahab.nexus.plugin.tag.internal;
 
 import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
 
+import ir.sahab.nexus.plugin.tag.api.AssociatedComponent;
 import ir.sahab.nexus.plugin.tag.api.Tag;
 import ir.sahab.nexus.plugin.tag.api.TagDefinition;
 import ir.sahab.nexus.plugin.tag.api.TagRestResourceDoc;
@@ -13,6 +14,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import javax.validation.ValidationException;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -27,7 +29,12 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import org.sonatype.goodies.common.ComponentSupport;
+import org.sonatype.nexus.repository.Repository;
+import org.sonatype.nexus.repository.manager.RepositoryManager;
+import org.sonatype.nexus.repository.storage.Component;
+import org.sonatype.nexus.repository.storage.ComponentStore;
 import org.sonatype.nexus.rest.Resource;
+
 /**
  * Endpoint which provides RESTful API for tagging.
  */
@@ -36,11 +43,15 @@ import org.sonatype.nexus.rest.Resource;
 @Path(V1_API_PREFIX)
 public class TagRestResource extends ComponentSupport implements Resource, TagRestResourceDoc {
 
-    private TagStore store;
+    private final TagStore tagStore;
+    private final RepositoryManager repositoryManager;
+    private final ComponentStore componentStore;
 
     @Inject
-    public TagRestResource(TagStore store) {
-        this.store = store;
+    public TagRestResource(TagStore tagStore, RepositoryManager repositoryManager, ComponentStore componentStore) {
+        this.tagStore = tagStore;
+        this.repositoryManager = repositoryManager;
+        this.componentStore = componentStore;
     }
 
     @GET
@@ -49,7 +60,7 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     @Override
     public Response getByName(@PathParam("name") String name) {
         log.info("Finding tag with name={}", name);
-        Optional<Tag> optional = store.findByName(name);
+        Optional<Tag> optional = tagStore.findByName(name);
         if (optional.isPresent()) {
             Tag found = optional.get();
             log.info("Tag {} found.", found);
@@ -65,14 +76,16 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     @Override
     public List<Tag> list(@QueryParam("attributes") String attributes) {
         Map<String, String> attributeMap = decodeAttributes(attributes);
-        List<Tag> tags = store.search(attributeMap);
+        List<Tag> tags = tagStore.search(attributeMap);
         log.info("Tag search for attributes={}={}", attributes, tags);
         return tags;
     }
 
     /**
      * Decodes query parameter of attributes to an attribute map.
-     * @param attributes comma separated key value pairs of attributes. i.e. key1=value1[,key2=value2,...]
+     *
+     * @param attributes comma separated key value pairs of attributes. i.e.
+     *                   key1=value1[,key2=value2,...]
      * @return map of attribute name to search value
      * @throws BadRequestException if key value pair is not in format key=value
      */
@@ -96,8 +109,9 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Override
-    public Tag add(TagDefinition request) {
-        Tag created = store.addOrUpdate(request);
+    public Tag add(TagDefinition definition) {
+        validateComponents(definition.getComponents());
+        Tag created = tagStore.addOrUpdate(definition);
         log.info("Tag {} created.", created);
         return created;
     }
@@ -107,11 +121,12 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Override
-    public Tag addOrUpdate(TagDefinition request, @PathParam("name") String name) {
-        if (!name.equals(request.getName())) {
+    public Tag addOrUpdate(TagDefinition definition, @PathParam("name") String name) {
+        if (!name.equals(definition.getName())) {
             throw new BadRequestException("Cannot change name.");
         }
-        Tag created = store.addOrUpdate(request);
+        validateComponents(definition.getComponents());
+        Tag created = tagStore.addOrUpdate(definition);
         log.info("Tag {} created.", created);
         return created;
     }
@@ -121,7 +136,7 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     @Override
     public Response delete(@PathParam("name") String name) {
         log.info("Deleting tag with name={}", name);
-        Optional<Tag> optional = store.delete(name);
+        Optional<Tag> optional = tagStore.delete(name);
         if (optional.isPresent()) {
             log.info("Tag {} removed.", optional.get());
             return Response.ok().build();
@@ -130,4 +145,21 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
         return Response.status(Status.NOT_FOUND).build();
     }
 
+    /**
+     * Checks if is given associated components exists in repository.
+     */
+    private void validateComponents(List<AssociatedComponent> components) {
+        for (AssociatedComponent component : components) {
+            Repository repository = repositoryManager.get(component.getRepository());
+            if (repository == null) {
+                throw new ValidationException("Repository " + component.getRepository() + " does not exists.");
+            }
+            Map<String, String> versionAttribute = Collections.singletonMap("version", component.getVersion());
+            List<Component> founds = componentStore.getAllMatchingComponents(repository,
+                    component.getGroup(), component.getName(), versionAttribute);
+            if (founds.isEmpty()) {
+                throw new ValidationException("Component " + component + " does not exists.");
+            }
+        }
+    }
 }

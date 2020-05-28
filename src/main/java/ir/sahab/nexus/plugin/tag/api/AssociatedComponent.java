@@ -1,5 +1,6 @@
 package ir.sahab.nexus.plugin.tag.api;
 
+import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -60,6 +61,24 @@ public class AssociatedComponent {
 
     public void setVersion(String version) {
         this.version = version;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        AssociatedComponent that = (AssociatedComponent) o;
+        return repository.equals(that.repository) &&
+               Objects.equals(group, that.group) &&
+               name.equals(that.name) &&
+               version.equals(that.version);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(repository, group, name, version);
     }
 
     @Override

@@ -14,10 +14,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
+
 import org.sonatype.nexus.orient.OClassNameBuilder;
 import org.sonatype.nexus.orient.OIndexNameBuilder;
 import org.sonatype.nexus.orient.entity.IterableEntityAdapter;
 import org.sonatype.nexus.repository.storage.ComponentEntityAdapter;
+
+import ir.sahab.nexus.plugin.tag.api.AssociatedComponent;
 
 /**
  * Provides persisting/reading tags from database.
@@ -34,6 +38,11 @@ public class TagEntityAdapter extends IterableEntityAdapter<TagEntity> {
     private static final String FIRST_CREATED_FIELD = "firstCreated";
     private static final String LAST_UPDATED_FIELD = "lastUpdated";
 
+    private static final String COMPONENT_REPOSITORY_FIELD = "repository";
+    private static final String COMPONENT_GROUP_FIELD = "group";
+    private static final String COMPONENT_NAME_FIELD = "name";
+    private static final String COMPONENT_VERSION_FIELD = "version";
+
     private static final String NAME_INDEX = new OIndexNameBuilder().type(DB_CLASS).property("name").build();
 
     public TagEntityAdapter() {
@@ -41,22 +50,15 @@ public class TagEntityAdapter extends IterableEntityAdapter<TagEntity> {
     }
 
     @Override
-    protected void defineType(ODatabaseDocumentTx db, OClass type) {
+    protected void defineType(OClass type) {
         type.createProperty(NAME_FIELD, OType.STRING).setMandatory(true).setNotNull(true);
         type.createProperty(FIRST_CREATED_FIELD, OType.DATETIME).setMandatory(true).setNotNull(true);
         type.createProperty(LAST_UPDATED_FIELD, OType.DATETIME).setMandatory(true).setNotNull(true);
         type.createProperty(ATTRIBUTES_FIELD, OType.EMBEDDEDMAP).setMandatory(true).setNotNull(true);
-
-        OClass componentClass = db.getMetadata().getSchema().getClass(ComponentEntityAdapter.DB_CLASS);
-        type.createProperty(COMPONENTS_FIELD, OType.LINKLIST, componentClass).setMandatory(true).setNotNull(true);
+        type.createProperty(COMPONENTS_FIELD, OType.EMBEDDEDLIST).setMandatory(true).setNotNull(true);
 
         type.createIndex(NAME_INDEX, INDEX_TYPE.UNIQUE, NAME_FIELD);
         type.createIndex(LAST_UPDATED_FIELD, INDEX_TYPE.NOTUNIQUE, LAST_UPDATED_FIELD);
-    }
-
-    @Override
-    protected void defineType(OClass type) {
-        // No need to implement, we've overridden #defineType(ODatabaseDocumentTx db, OClass type) instead.
     }
 
     @Override
@@ -71,6 +73,12 @@ public class TagEntityAdapter extends IterableEntityAdapter<TagEntity> {
         tag.setLastUpdated(oDocument.field(LAST_UPDATED_FIELD));
         tag.setAttributes(oDocument.field(ATTRIBUTES_FIELD));
         tag.setComponents(oDocument.field(COMPONENTS_FIELD));
+
+        List<ODocument> componentDocuments = oDocument.field(COMPONENTS_FIELD);
+        List<AssociatedComponent> components = componentDocuments.stream()
+                .map(TagEntityAdapter::toComponent)
+                .collect(Collectors.toList());
+        tag.setComponents(components);
     }
 
     @Override
@@ -79,7 +87,28 @@ public class TagEntityAdapter extends IterableEntityAdapter<TagEntity> {
         oDocument.field(FIRST_CREATED_FIELD, tag.getFirstCreated());
         oDocument.field(LAST_UPDATED_FIELD, tag.getLastUpdated());
         oDocument.field(ATTRIBUTES_FIELD, tag.getAttributes());
-        oDocument.field(COMPONENTS_FIELD, tag.getComponents());
+        List<ODocument> componentDocuments = tag.getComponents().stream()
+                .map(TagEntityAdapter::toDocument)
+                .collect(Collectors.toList());
+        oDocument.field(COMPONENTS_FIELD, componentDocuments);
+    }
+
+    private static ODocument toDocument(AssociatedComponent component) {
+        ODocument document = new ODocument();
+        document.field(COMPONENT_REPOSITORY_FIELD, component.getRepository());
+        document.field(COMPONENT_GROUP_FIELD, component.getGroup());
+        document.field(COMPONENT_NAME_FIELD, component.getName());
+        document.field(COMPONENT_VERSION_FIELD, component.getVersion());
+        return document;
+    }
+
+    private static AssociatedComponent toComponent(ODocument document) {
+        AssociatedComponent component = new AssociatedComponent();
+        component.setRepository(document.field(COMPONENT_REPOSITORY_FIELD));
+        component.setGroup(document.field(COMPONENT_GROUP_FIELD));
+        component.setName(document.field(COMPONENT_NAME_FIELD));
+        component.setVersion(document.field(COMPONENT_VERSION_FIELD));
+        return component;
     }
 
     public Optional<TagEntity> findByName(ODatabaseDocumentTx tx, String name) {

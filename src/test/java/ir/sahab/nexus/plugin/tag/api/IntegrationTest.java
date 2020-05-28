@@ -124,7 +124,7 @@ public class IntegrationTest {
 
         // Update tag
         tag.getAttributes().put(STATUS, "successful");
-        tag.getComponents().add(component2);
+        tag.setComponents(Arrays.asList(component1, component2));
         response = target.path("tag/" + tag.getName())
                 .request()
                 .put(Entity.entity(tag, MediaType.APPLICATION_JSON_TYPE));

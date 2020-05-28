@@ -3,6 +3,7 @@ package ir.sahab.nexus.plugin.tag.api;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
+import org.hibernate.validator.constraints.NotBlank;
 
 /**
  * Holds fields used to create a new tag.
@@ -10,6 +11,7 @@ import javax.validation.constraints.NotNull;
 public class TagDefinition {
 
     @NotNull
+    @NotBlank
     protected String name;
 
     @NotNull
