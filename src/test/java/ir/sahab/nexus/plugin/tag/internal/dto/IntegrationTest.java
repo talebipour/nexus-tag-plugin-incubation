@@ -1,5 +1,8 @@
-package ir.sahab.nexus.plugin.tag.api;
+package ir.sahab.nexus.plugin.tag.internal.dto;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -9,7 +12,6 @@ import ir.sahab.dockercomposer.WaitFor;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -38,6 +40,8 @@ public class IntegrationTest {
     private static final String STATUS = "Status";
     public static final String USERNAME = "admin";
     public static final String PASSWORD = "admin123";
+    private static final String REPO_MAVEN_RELEASES = "maven-releases";
+    private static final String REPO_NUGET_HOSTED = "nuget-hosted";
 
     @ClassRule
     public static DockerCompose compose = DockerCompose.builder()
@@ -57,10 +61,11 @@ public class IntegrationTest {
     public void setup() {
         client = ClientBuilder.newClient();
         target = client.target("http://nexus:8081/service/rest" + APIConstants.V1_API_PREFIX);
-        component1 = new AssociatedComponent("maven-releases", "gr1", "comp1", randomAlphanumeric(5));
-        uploadComponent(component1);
-        component2 = new AssociatedComponent("maven-releases", "gr2", "comp2", randomAlphanumeric(5));
-        uploadComponent(component2);
+        component1 = new AssociatedComponent(REPO_MAVEN_RELEASES, "gr1", "comp1", randomAlphanumeric(5));
+        uploadMavenComponent(component1);
+        component2 = new AssociatedComponent(REPO_MAVEN_RELEASES, "gr2", "comp2", randomAlphanumeric(5));
+        uploadMavenComponent(component2);
+        //TODO: Test non-maven artifacts which does not have group/version
     }
 
 
@@ -69,14 +74,28 @@ public class IntegrationTest {
         client.close();
     }
 
-    private void uploadComponent(AssociatedComponent component) {
+    private void uploadMavenComponent(AssociatedComponent component) {
         MultipartFormDataOutput output = new MultipartFormDataOutput();
         output.addFormData("maven2.groupId", component.getGroup(), MediaType.TEXT_PLAIN_TYPE);
         output.addFormData("maven2.artifactId", component.getName(), MediaType.TEXT_PLAIN_TYPE);
         output.addFormData("maven2.version", component.getVersion(), MediaType.TEXT_PLAIN_TYPE);
         output.addFormData("maven2.asset1.extension", "jar", MediaType.TEXT_PLAIN_TYPE);
         ByteArrayInputStream inputStream = new ByteArrayInputStream(randomAlphanumeric(100).getBytes());
-        output.addFormData("maven2.asset1", inputStream, MediaType.APPLICATION_OCTET_STREAM_TYPE, "test-artifact.jar");
+        output.addFormData("maven2.asset1", inputStream, MediaType.APPLICATION_OCTET_STREAM_TYPE,
+                "test-maven-artifact.jar");
+
+        Response response = target.path("components").queryParam("repository", component.getRepository())
+                .request()
+                .header(HttpHeaders.AUTHORIZATION, authorizationHeader())
+                .post(Entity.entity(output, MediaType.MULTIPART_FORM_DATA_TYPE));
+        assertEquals(Family.SUCCESSFUL, response.getStatusInfo().getFamily());
+    }
+
+    private void uploadNugetComponent(AssociatedComponent component) {
+        MultipartFormDataOutput output = new MultipartFormDataOutput();
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(randomAlphanumeric(100).getBytes());
+        output.addFormData("nuget.asset", inputStream, MediaType.APPLICATION_OCTET_STREAM_TYPE,
+                "test-nuget-artifact.nupkg");
 
         Response response = target.path("components").queryParam("repository", component.getRepository())
                 .request()
@@ -141,17 +160,35 @@ public class IntegrationTest {
 
     @Test
     public void testValidation() {
-        TagDefinition nullName = new TagDefinition();
-        nullName.setAttributes(Collections.emptyMap());
-        assertEquals(Status.BAD_REQUEST.getStatusCode(), addTag(nullName).getStatus());
+        TagDefinition nullName = new TagDefinition(null, emptyMap(), emptyList());
+        Response response = addTag(nullName);
+        assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        response.close();
 
-        TagDefinition emptyName = new TagDefinition();
-        nullName.setAttributes(Collections.emptyMap());
-        assertEquals(Status.BAD_REQUEST.getStatusCode(), addTag(emptyName).getStatus());
+        TagDefinition emptyName = new TagDefinition("", emptyMap(), emptyList());
+        response = addTag(emptyName);
+        assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        response.close();
 
-        TagDefinition nullAttribute = new TagDefinition();
-        nullName.setName("name");
-        assertEquals(Status.BAD_REQUEST.getStatusCode(), addTag(nullAttribute).getStatus());
+        TagDefinition nullAttribute = new TagDefinition("name", null, emptyList());
+        response = addTag(nullAttribute);
+        assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        response.close();
+
+        AssociatedComponent notExistingRepoComponent =
+                new AssociatedComponent("not-existing-repo", "", "not-exist-artifact", "some-version");
+        TagDefinition withNonExistingComponent =
+                new TagDefinition("name", emptyMap(), singletonList(notExistingRepoComponent));
+        response = addTag(withNonExistingComponent);
+        assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        response.close();
+
+        AssociatedComponent notExistingComponent =
+                new AssociatedComponent(REPO_MAVEN_RELEASES, "", "not-exist-artifact", "some-version");
+        withNonExistingComponent = new TagDefinition("name", emptyMap(), singletonList(notExistingComponent));
+        response = addTag(withNonExistingComponent);
+        assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        response.close();
     }
 
     private Response addTag(TagDefinition tag) {

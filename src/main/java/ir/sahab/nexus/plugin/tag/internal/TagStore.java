@@ -4,8 +4,8 @@ import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SCHEMAS;
 
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
 import com.orientechnologies.orient.core.record.impl.ODocument;
-import ir.sahab.nexus.plugin.tag.api.Tag;
-import ir.sahab.nexus.plugin.tag.api.TagDefinition;
+import ir.sahab.nexus.plugin.tag.internal.dto.Tag;
+import ir.sahab.nexus.plugin.tag.internal.dto.TagDefinition;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;

@@ -1,7 +1,7 @@
 package ir.sahab.nexus.plugin.tag.internal;
 
-import ir.sahab.nexus.plugin.tag.api.AssociatedComponent;
-import ir.sahab.nexus.plugin.tag.api.Tag;
+import ir.sahab.nexus.plugin.tag.internal.dto.AssociatedComponent;
+import ir.sahab.nexus.plugin.tag.internal.dto.Tag;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -24,11 +24,6 @@ class TagEntity extends AbstractEntity {
     private List<AssociatedComponent> components;
 
     TagEntity() {
-    }
-
-    TagEntity(String name, Map<String, String> attributes) {
-        this.name = name;
-        this.attributes = attributes;
     }
 
     public String getName() {

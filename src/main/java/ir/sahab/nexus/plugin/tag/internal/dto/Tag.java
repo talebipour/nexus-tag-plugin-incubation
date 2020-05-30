@@ -1,4 +1,4 @@
-package ir.sahab.nexus.plugin.tag.api;
+package ir.sahab.nexus.plugin.tag.internal.dto;
 
 import java.util.Date;
 import java.util.List;

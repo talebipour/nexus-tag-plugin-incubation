@@ -19,9 +19,8 @@ import java.util.stream.Collectors;
 import org.sonatype.nexus.orient.OClassNameBuilder;
 import org.sonatype.nexus.orient.OIndexNameBuilder;
 import org.sonatype.nexus.orient.entity.IterableEntityAdapter;
-import org.sonatype.nexus.repository.storage.ComponentEntityAdapter;
 
-import ir.sahab.nexus.plugin.tag.api.AssociatedComponent;
+import ir.sahab.nexus.plugin.tag.internal.dto.AssociatedComponent;
 
 /**
  * Provides persisting/reading tags from database.

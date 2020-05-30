@@ -2,20 +2,21 @@ package ir.sahab.nexus.plugin.tag.internal;
 
 import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
 
-import ir.sahab.nexus.plugin.tag.api.AssociatedComponent;
-import ir.sahab.nexus.plugin.tag.api.Tag;
-import ir.sahab.nexus.plugin.tag.api.TagDefinition;
-import ir.sahab.nexus.plugin.tag.api.TagRestResourceDoc;
+import ir.sahab.nexus.plugin.tag.internal.dto.Tag;
+import ir.sahab.nexus.plugin.tag.internal.dto.TagDefinition;
+import ir.sahab.nexus.plugin.tag.internal.dto.TagRestResourceDoc;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import javax.validation.Valid;
-import javax.validation.ValidationException;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import javax.validation.Validator;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -30,10 +31,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import org.sonatype.goodies.common.ComponentSupport;
-import org.sonatype.nexus.repository.Repository;
-import org.sonatype.nexus.repository.manager.RepositoryManager;
-import org.sonatype.nexus.repository.storage.Component;
-import org.sonatype.nexus.repository.storage.ComponentStore;
 import org.sonatype.nexus.rest.Resource;
 
 /**
@@ -45,14 +42,12 @@ import org.sonatype.nexus.rest.Resource;
 public class TagRestResource extends ComponentSupport implements Resource, TagRestResourceDoc {
 
     private final TagStore tagStore;
-    private final RepositoryManager repositoryManager;
-    private final ComponentStore componentStore;
+    private Validator defaultValidator;
 
     @Inject
-    public TagRestResource(TagStore tagStore, RepositoryManager repositoryManager, ComponentStore componentStore) {
+    public TagRestResource(TagStore tagStore, Validator defaultValidator) {
         this.tagStore = tagStore;
-        this.repositoryManager = repositoryManager;
-        this.componentStore = componentStore;
+        this.defaultValidator = defaultValidator;
     }
 
     @GET
@@ -110,8 +105,8 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Override
-    public Tag add(@Valid TagDefinition definition) {
-        validateComponents(definition.getComponents());
+    public Tag add(TagDefinition definition) {
+        validate(definition);
         Tag created = tagStore.addOrUpdate(definition);
         log.info("Tag {} created.", created);
         return created;
@@ -122,11 +117,11 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Override
-    public Tag addOrUpdate(@Valid TagDefinition definition, @PathParam("name") String name) {
+    public Tag addOrUpdate(TagDefinition definition, @PathParam("name") String name) {
+        validate(definition);
         if (!name.equals(definition.getName())) {
             throw new BadRequestException("Cannot change name.");
         }
-        validateComponents(definition.getComponents());
         Tag created = tagStore.addOrUpdate(definition);
         log.info("Tag {} created.", created);
         return created;
@@ -147,20 +142,16 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     }
 
     /**
-     * Checks if is given associated components exists in repository.
+     * We haven't managed to use javax validation yet, as if we add @Valid for any parameter, all requests would fail
+     * with 400 code. The exact reason is not clear for now, but it seems it's related to internal validators of
+     * nexus. So we do validation manually for now.
+     * TODO: Fix javax validation problem
      */
-    private void validateComponents(List<AssociatedComponent> components) {
-        for (AssociatedComponent component : components) {
-            Repository repository = repositoryManager.get(component.getRepository());
-            if (repository == null) {
-                throw new ValidationException("Repository " + component.getRepository() + " does not exists.");
-            }
-            Map<String, String> versionAttribute = Collections.singletonMap("version", component.getVersion());
-            List<Component> founds = componentStore.getAllMatchingComponents(repository,
-                    component.getGroup(), component.getName(), versionAttribute);
-            if (founds.isEmpty()) {
-                throw new ValidationException("Component " + component + " does not exists.");
-            }
+    private void validate(TagDefinition definition) {
+        Set<ConstraintViolation<TagDefinition>> violations = defaultValidator.validate(definition);
+        if (!violations.isEmpty()) {
+            throw new ConstraintViolationException("Invalid tag.", violations);
         }
     }
+
 }

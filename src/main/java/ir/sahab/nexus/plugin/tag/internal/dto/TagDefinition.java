@@ -1,7 +1,8 @@
-package ir.sahab.nexus.plugin.tag.api;
+package ir.sahab.nexus.plugin.tag.internal.dto;
 
 import java.util.List;
 import java.util.Map;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotBlank;
 
@@ -18,6 +19,7 @@ public class TagDefinition {
     protected Map<String, String> attributes;
 
     @NotNull(message = "Tag components can't be null.")
+    @Valid
     protected List<AssociatedComponent> components;
 
     public TagDefinition() {

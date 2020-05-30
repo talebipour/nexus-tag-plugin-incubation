@@ -1,22 +1,27 @@
-package ir.sahab.nexus.plugin.tag.api;
+package ir.sahab.nexus.plugin.tag.internal.dto;
 
+import ir.sahab.nexus.plugin.tag.internal.validation.ComponentExists;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
+import org.hibernate.validator.constraints.NotBlank;
 
 /**
  * Represent a component (artifact) which a tag can be associated with.
  */
+@ComponentExists
 public class AssociatedComponent {
 
     @NotNull(message = "Components repository can't be null.")
+    @NotBlank
     private String repository;
 
+    @NotNull
     private String group;
 
     @NotNull(message = "Components name can't be null.")
+    @NotBlank
     private String name;
 
-    @NotNull(message = "Components version can't be null.")
     private String version;
 
 
