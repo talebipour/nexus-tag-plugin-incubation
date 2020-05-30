@@ -4,7 +4,6 @@ import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
 
 import ir.sahab.nexus.plugin.tag.internal.dto.Tag;
 import ir.sahab.nexus.plugin.tag.internal.dto.TagDefinition;
-import ir.sahab.nexus.plugin.tag.internal.dto.TagRestResourceDoc;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
