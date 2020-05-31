@@ -120,7 +120,7 @@ public class IntegrationTest {
         assertDefinitionEquals(tag, postResponseTag);
 
         // Test Get by name
-        Tag retrieved = target.path("tag/" + tag.getName()).request().get(Tag.class);
+        Tag retrieved = target.path("tags/" + tag.getName()).request().get(Tag.class);
         assertDefinitionEquals(tag, retrieved);
 
         // Test search by attribute
@@ -141,9 +141,9 @@ public class IntegrationTest {
         assertDefinitionEquals(tag, putResponseTag);
 
         // Test deleting tag
-        response = target.path("tag/" + tag.getName()).request().delete();
+        response = target.path("tags/" + tag.getName()).request().delete();
         assertEquals(Family.SUCCESSFUL, response.getStatusInfo().getFamily());
-        response = target.path("tag/" + tag.getName()).request().get();
+        response = target.path("tags/" + tag.getName()).request().get();
         assertEquals(Status.NOT_FOUND.getStatusCode(), response.getStatus());
     }
 
@@ -160,7 +160,7 @@ public class IntegrationTest {
         String newName = tag.getName() + "-cloned";
         TagCloneRequest request = new TagCloneRequest(tag.getName(), singletonMap("attr2", "val2"));
         response =
-                target.path("tag/" + newName).request().post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
+                target.path("tags/" + newName).request().post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
         assertEquals(Family.SUCCESSFUL, response.getStatusInfo().getFamily());
         Tag cloned = response.readEntity(Tag.class);
         assertEquals(newName, cloned.getName());
@@ -168,7 +168,7 @@ public class IntegrationTest {
         assertEquals(tag.getComponents(), cloned.getComponents());
 
         // Check tag is actually created
-        Tag retrieved = target.path("tag/" + newName).request().get(Tag.class);
+        Tag retrieved = target.path("tags/" + newName).request().get(Tag.class);
         assertDefinitionEquals(cloned, retrieved);
     }
 
@@ -206,11 +206,11 @@ public class IntegrationTest {
     }
 
     private Response addTag(TagDefinition tag) {
-        return target.path("tag").request().post(Entity.entity(tag, MediaType.APPLICATION_JSON_TYPE));
+        return target.path("tags").request().post(Entity.entity(tag, MediaType.APPLICATION_JSON_TYPE));
     }
 
     private Response updateTag(TagDefinition tag) {
-        return target.path("tag/" + tag.getName()).request().put(Entity.entity(tag, MediaType.APPLICATION_JSON_TYPE));
+        return target.path("tags/" + tag.getName()).request().put(Entity.entity(tag, MediaType.APPLICATION_JSON_TYPE));
     }
 
     private void assertDefinitionEquals(TagDefinition expected, Tag actual) {

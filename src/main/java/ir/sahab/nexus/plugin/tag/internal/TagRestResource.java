@@ -51,7 +51,7 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     }
 
     @GET
-    @Path("/tag/{name}")
+    @Path("/tags/{name}")
     @Produces(MediaType.APPLICATION_JSON)
     @Override
     public Tag getByName(@PathParam("name") String name) {
@@ -93,7 +93,7 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     }
 
     @POST
-    @Path("/tag")
+    @Path("/tags")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Override
@@ -103,7 +103,7 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     }
 
     @PUT
-    @Path("/tag/{name}")
+    @Path("/tags/{name}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Override
@@ -116,14 +116,14 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     }
 
     @DELETE
-    @Path("/tag/{name}")
+    @Path("/tags/{name}")
     @Override
     public void delete(@PathParam("name") String name) {
         tagStore.delete(name);
     }
 
     @POST
-    @Path("/tag/{name}")
+    @Path("/tags/{name}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Override
