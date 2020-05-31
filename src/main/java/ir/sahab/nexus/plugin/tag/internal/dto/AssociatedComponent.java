@@ -29,6 +29,10 @@ public class AssociatedComponent {
         // Used by Jackson
     }
 
+    public AssociatedComponent(AssociatedComponent component) {
+        this(component.repository, component.group, component.name, component.version);
+    }
+
     public AssociatedComponent(String repository, String group, String name, String version) {
         this.repository = repository;
         this.group = group;

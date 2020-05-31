@@ -3,11 +3,11 @@ package ir.sahab.nexus.plugin.tag.internal;
 import static org.sonatype.nexus.common.app.ManagedLifecycle.Phase.SCHEMAS;
 
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
-import com.orientechnologies.orient.core.record.impl.ODocument;
 import ir.sahab.nexus.plugin.tag.internal.dto.Tag;
 import ir.sahab.nexus.plugin.tag.internal.dto.TagDefinition;
+import ir.sahab.nexus.plugin.tag.internal.exception.TagAlreadyExistsException;
+import ir.sahab.nexus.plugin.tag.internal.exception.TagNotFoundException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +19,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
+import javax.validation.ConstraintViolationException;
+import javax.validation.ValidationException;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
 import org.sonatype.nexus.orient.DatabaseInstance;
@@ -48,9 +50,13 @@ public class TagStore extends StateGuardLifecycleSupport {
         }
     }
 
-    public Optional<Tag> findByName(String name) {
+    /**
+     * @return tag with given name
+     * @throws TagNotFoundException if tag does not exists
+     */
+    public Tag getByName(String name) {
         try (ODatabaseDocumentTx tx = dbProvider.get().acquire()) {
-            return entityAdapter.findByName(tx, name).map(TagEntity::toDto);
+            return getTag(name, tx).toDto();
         }
     }
 
@@ -69,6 +75,7 @@ public class TagStore extends StateGuardLifecycleSupport {
      * @return created/updated tag
      */
     public Tag addOrUpdate(TagDefinition definition) {
+        log.info("Adding or updating tag: {}", definition);
         try (ODatabaseDocumentTx tx = dbProvider.get().acquire()) {
             Date currentDate = new Date();
             Optional<TagEntity> existing = entityAdapter.findByName(tx, definition.getName());
@@ -82,27 +89,64 @@ public class TagStore extends StateGuardLifecycleSupport {
             entity.setComponents(new ArrayList<>(definition.getComponents()));
             entity.setLastUpdated(currentDate);
 
-            ODocument document;
             if (existing.isPresent()) {
-                document = entityAdapter.editEntity(tx, entity);
+                entityAdapter.editEntity(tx, entity);
                 log.info("Tag {} updated in database.", entity);
             } else {
-                document = entityAdapter.addEntity(tx, entity);
+                entityAdapter.addEntity(tx, entity);
                 log.info("Tag {} added to database.", entity);
             }
-            return entityAdapter.transform(Collections.singleton(document)).iterator().next().toDto();
+            return entity.toDto();
         }
     }
 
     /**
      * @param name name of tag to delete
-     * @return removed tag if existed.
+     * @throws TagNotFoundException if tag with given name does not exists
      */
-    public Optional<Tag> delete(String name) {
+    public void delete(String name) throws TagNotFoundException {
+        log.info("Deleting {} tag.", name);
         try (ODatabaseDocumentTx tx = dbProvider.get().acquire()) {
-            Optional<TagEntity> optional = entityAdapter.findByName(tx, name);
-            optional.ifPresent(entity -> entityAdapter.deleteEntity(tx, entity));
-            return optional.map(TagEntity::toDto);
+            TagEntity entity = getTag(name, tx);
+            entityAdapter.deleteEntity(tx, entity);
+            log.info("Tag {} deleted.", entity);
         }
+    }
+
+    /**
+     * @param sourceTagName name of tag to clone
+     * @param newTagName name of new tag
+     * @param appendingAttributes attributes to append to cloned tag.
+     * @return created tag
+     * @throws TagNotFoundException if tag with given name does not exists
+     * @throws TagAlreadyExistsException if tag with given new name already exists
+     */
+    public Tag cloneExisting(String sourceTagName, String newTagName, Map<String, String> appendingAttributes) {
+        log.info("Cloning {} into {}, appending attributes:{}", sourceTagName, newTagName, appendingAttributes);
+        try (ODatabaseDocumentTx tx = dbProvider.get().acquire()) {
+            TagEntity entity = getTag(sourceTagName, tx);
+            if (entityAdapter.findByName(tx, newTagName).isPresent()) {
+                throw new TagAlreadyExistsException(newTagName);
+            }
+            TagEntity cloned = new TagEntity(entity);
+            cloned.setName(newTagName);
+            cloned.getAttributes().putAll(appendingAttributes);
+            Date date = new Date();
+            cloned.setFirstCreated(date);
+            cloned.setLastUpdated(date);
+            entityAdapter.addEntity(tx, cloned);
+            log.info("Tag {} cloned into new tag: {}", sourceTagName, cloned);
+            return cloned.toDto();
+        }
+    }
+
+    private TagEntity getTag(String name, ODatabaseDocumentTx tx) {
+        Optional<TagEntity> optional = entityAdapter.findByName(tx, name);
+        if (!optional.isPresent()) {
+            log.info("Tag {} not found.", name);
+            throw new TagNotFoundException(name);
+        }
+        log.info("Tag {} found: {}", name, optional.get());
+        return optional.get();
     }
 }

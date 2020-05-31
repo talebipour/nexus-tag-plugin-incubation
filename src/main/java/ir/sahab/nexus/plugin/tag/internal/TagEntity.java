@@ -2,9 +2,12 @@ package ir.sahab.nexus.plugin.tag.internal;
 
 import ir.sahab.nexus.plugin.tag.internal.dto.AssociatedComponent;
 import ir.sahab.nexus.plugin.tag.internal.dto.Tag;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.sonatype.nexus.common.entity.AbstractEntity;
 
 
@@ -25,6 +28,13 @@ class TagEntity extends AbstractEntity {
 
     TagEntity() {
     }
+
+    TagEntity(TagEntity entity) {
+        name = entity.name;
+        attributes = new HashMap<>(entity.attributes);
+        components = entity.components.stream().map(AssociatedComponent::new).collect(Collectors.toList());
+    }
+
 
     public String getName() {
         return name;
@@ -69,6 +79,7 @@ class TagEntity extends AbstractEntity {
     public Tag toDto() {
         return new Tag(name, attributes, components, firstCreated, lastUpdated);
     }
+
 
     @Override
     public String toString() {

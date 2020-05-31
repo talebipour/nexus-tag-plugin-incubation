@@ -3,10 +3,12 @@ package ir.sahab.nexus.plugin.tag.internal.dto;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import com.google.common.collect.ImmutableMap;
 import ir.sahab.dockercomposer.DockerCompose;
 import ir.sahab.dockercomposer.WaitFor;
 import java.io.ByteArrayInputStream;
@@ -91,19 +93,6 @@ public class IntegrationTest {
         assertEquals(Family.SUCCESSFUL, response.getStatusInfo().getFamily());
     }
 
-    private void uploadNugetComponent(AssociatedComponent component) {
-        MultipartFormDataOutput output = new MultipartFormDataOutput();
-        ByteArrayInputStream inputStream = new ByteArrayInputStream(randomAlphanumeric(100).getBytes());
-        output.addFormData("nuget.asset", inputStream, MediaType.APPLICATION_OCTET_STREAM_TYPE,
-                "test-nuget-artifact.nupkg");
-
-        Response response = target.path("components").queryParam("repository", component.getRepository())
-                .request()
-                .header(HttpHeaders.AUTHORIZATION, authorizationHeader())
-                .post(Entity.entity(output, MediaType.MULTIPART_FORM_DATA_TYPE));
-        assertEquals(Family.SUCCESSFUL, response.getStatusInfo().getFamily());
-    }
-
     /**
      * @return authorization header of basic authentication
      */
@@ -122,17 +111,17 @@ public class IntegrationTest {
 
         TagDefinition tag = new TagDefinition(randomAlphanumeric(5), attributes, Arrays.asList(component1));
 
-        // Create Tag
+        // Add Tag
         Response response = addTag(tag);
         assertEquals(Family.SUCCESSFUL, response.getStatusInfo().getFamily());
         Tag postResponseTag = response.readEntity(Tag.class);
         assertFalse(new Date().before(postResponseTag.getFirstCreated()));
         assertEquals(postResponseTag.getFirstCreated(), postResponseTag.getLastUpdated());
-        assertTagEquals(tag, postResponseTag);
+        assertDefinitionEquals(tag, postResponseTag);
 
         // Test Get by name
         Tag retrieved = target.path("tag/" + tag.getName()).request().get(Tag.class);
-        assertTagEquals(tag, retrieved);
+        assertDefinitionEquals(tag, retrieved);
 
         // Test search by attribute
         List<Tag> result = target.path("tags")
@@ -140,7 +129,7 @@ public class IntegrationTest {
                 .request()
                 .get(new GenericType<List<Tag>>() {});
         assertEquals(1, result.size());
-        assertTagEquals(tag, result.get(0));
+        assertDefinitionEquals(tag, result.get(0));
 
         // Update tag
         tag.getAttributes().put(STATUS, "successful");
@@ -149,13 +138,38 @@ public class IntegrationTest {
         Tag putResponseTag = response.readEntity(Tag.class);
         assertEquals(postResponseTag.getFirstCreated(), putResponseTag.getFirstCreated());
         assertFalse(new Date().before(putResponseTag.getLastUpdated()));
-        assertTagEquals(tag, putResponseTag);
+        assertDefinitionEquals(tag, putResponseTag);
 
         // Test deleting tag
         response = target.path("tag/" + tag.getName()).request().delete();
         assertEquals(Family.SUCCESSFUL, response.getStatusInfo().getFamily());
         response = target.path("tag/" + tag.getName()).request().get();
         assertEquals(Status.NOT_FOUND.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    public void testClone() {
+        TagDefinition tag = new TagDefinition(randomAlphanumeric(5), singletonMap("attr1", "val1"),
+                Arrays.asList(component1, component2));
+        // Add Tag
+        Response response = addTag(tag);
+        assertEquals(Family.SUCCESSFUL, response.getStatusInfo().getFamily());
+        response.close();
+
+        // Clone Tag
+        String newName = tag.getName() + "-cloned";
+        TagCloneRequest request = new TagCloneRequest(tag.getName(), singletonMap("attr2", "val2"));
+        response =
+                target.path("tag/" + newName).request().post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
+        assertEquals(Family.SUCCESSFUL, response.getStatusInfo().getFamily());
+        Tag cloned = response.readEntity(Tag.class);
+        assertEquals(newName, cloned.getName());
+        assertEquals(ImmutableMap.of("attr1", "val1", "attr2", "val2"), cloned.getAttributes());
+        assertEquals(tag.getComponents(), cloned.getComponents());
+
+        // Check tag is actually created
+        Tag retrieved = target.path("tag/" + newName).request().get(Tag.class);
+        assertDefinitionEquals(cloned, retrieved);
     }
 
     @Test
@@ -199,7 +213,7 @@ public class IntegrationTest {
         return target.path("tag/" + tag.getName()).request().put(Entity.entity(tag, MediaType.APPLICATION_JSON_TYPE));
     }
 
-    private void assertTagEquals(TagDefinition expected, Tag actual) {
+    private void assertDefinitionEquals(TagDefinition expected, Tag actual) {
         assertEquals(expected.getName(), actual.getName());
         assertEquals(expected.getAttributes(), actual.getAttributes());
         assertEquals(expected.getComponents(), actual.getComponents());
