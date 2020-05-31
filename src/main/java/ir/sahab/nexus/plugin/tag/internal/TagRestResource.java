@@ -38,7 +38,7 @@ import org.sonatype.nexus.rest.Resource;
  */
 @Named
 @Singleton
-@Path(V1_API_PREFIX)
+@Path(V1_API_PREFIX + "/tags")
 public class TagRestResource extends ComponentSupport implements Resource, TagRestResourceDoc {
 
     private final TagStore tagStore;
@@ -51,7 +51,7 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     }
 
     @GET
-    @Path("/tags/{name}")
+    @Path("/{name}")
     @Produces(MediaType.APPLICATION_JSON)
     @Override
     public Tag getByName(@PathParam("name") String name) {
@@ -59,7 +59,6 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     }
 
     @GET
-    @Path("/tags")
     @Produces(MediaType.APPLICATION_JSON)
     @Override
     public List<Tag> list(@QueryParam("attributes") String attributes) {
@@ -93,7 +92,6 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     }
 
     @POST
-    @Path("/tags")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Override
@@ -103,7 +101,7 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     }
 
     @PUT
-    @Path("/tags/{name}")
+    @Path("/{name}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Override
@@ -116,14 +114,14 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     }
 
     @DELETE
-    @Path("/tags/{name}")
+    @Path("/{name}")
     @Override
     public void delete(@PathParam("name") String name) {
         tagStore.delete(name);
     }
 
     @POST
-    @Path("/tags/{name}")
+    @Path("/{name}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Override

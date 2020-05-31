@@ -1,6 +1,8 @@
 package ir.sahab.nexus.plugin.tag.internal.exception;
 
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 /**
  * This exception is thrown whenever target tag does not exists.
@@ -8,6 +10,6 @@ import javax.ws.rs.NotFoundException;
 public class TagNotFoundException extends NotFoundException {
 
     public TagNotFoundException(String tagName) {
-        super(String.format("Tag %s does not exists.", tagName));
+        super(Response.status(Status.NOT_FOUND).entity("Tag doess not exists.").build());
     }
 }
