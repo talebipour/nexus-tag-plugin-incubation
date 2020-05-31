@@ -2,7 +2,6 @@ package ir.sahab.nexus.plugin.tag.internal;
 
 import ir.sahab.nexus.plugin.tag.internal.dto.AssociatedComponent;
 import ir.sahab.nexus.plugin.tag.internal.dto.Tag;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;

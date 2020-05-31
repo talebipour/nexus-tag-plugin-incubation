@@ -5,8 +5,7 @@ import static org.sonatype.nexus.rest.APIConstants.V1_API_PREFIX;
 import ir.sahab.nexus.plugin.tag.internal.dto.Tag;
 import ir.sahab.nexus.plugin.tag.internal.dto.TagCloneRequest;
 import ir.sahab.nexus.plugin.tag.internal.dto.TagDefinition;
-import ir.sahab.nexus.plugin.tag.internal.exception.TagAlreadyExistsException;
-import ir.sahab.nexus.plugin.tag.internal.exception.TagNotFoundException;
+import ir.sahab.nexus.plugin.tag.internal.exception.ErrorResponse;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -22,7 +21,6 @@ import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -30,6 +28,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import org.sonatype.goodies.common.ComponentSupport;
 import org.sonatype.nexus.rest.Resource;
 
@@ -108,7 +108,9 @@ public class TagRestResource extends ComponentSupport implements Resource, TagRe
     public Tag addOrUpdate(TagDefinition definition, @PathParam("name") String name) {
         validate(definition);
         if (!name.equals(definition.getName())) {
-            throw new BadRequestException("Cannot change name.");
+            Response response =
+                    Response.status(Status.BAD_REQUEST).entity(ErrorResponse.of("Cannot change name.")).build();
+            throw new BadRequestException(response);
         }
         return tagStore.addOrUpdate(definition);
     }

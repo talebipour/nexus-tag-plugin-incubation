@@ -19,8 +19,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
-import javax.validation.ConstraintViolationException;
-import javax.validation.ValidationException;
 import org.sonatype.nexus.common.app.ManagedLifecycle;
 import org.sonatype.nexus.common.stateguard.StateGuardLifecycleSupport;
 import org.sonatype.nexus.orient.DatabaseInstance;
@@ -126,7 +124,7 @@ public class TagStore extends StateGuardLifecycleSupport {
         try (ODatabaseDocumentTx tx = dbProvider.get().acquire()) {
             TagEntity entity = getTag(sourceTagName, tx);
             if (entityAdapter.findByName(tx, newTagName).isPresent()) {
-                throw new TagAlreadyExistsException(newTagName);
+                throw new TagAlreadyExistsException();
             }
             TagEntity cloned = new TagEntity(entity);
             cloned.setName(newTagName);
@@ -144,7 +142,7 @@ public class TagStore extends StateGuardLifecycleSupport {
         Optional<TagEntity> optional = entityAdapter.findByName(tx, name);
         if (!optional.isPresent()) {
             log.info("Tag {} not found.", name);
-            throw new TagNotFoundException(name);
+            throw new TagNotFoundException();
         }
         log.info("Tag {} found: {}", name, optional.get());
         return optional.get();

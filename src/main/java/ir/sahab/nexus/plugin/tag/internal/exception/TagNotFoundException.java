@@ -9,7 +9,7 @@ import javax.ws.rs.core.Response.Status;
  */
 public class TagNotFoundException extends NotFoundException {
 
-    public TagNotFoundException(String tagName) {
-        super(Response.status(Status.NOT_FOUND).entity("Tag doess not exists.").build());
+    public TagNotFoundException() {
+        super(Response.status(Status.NOT_FOUND).entity(ErrorResponse.of("Tag not found")).build());
     }
 }
